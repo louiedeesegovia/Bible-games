@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Heardle Clone</title>
+<style>
+  :root{
+    --bg:#0c0c0c;
+    --panel:#151515;
+    --line:#3a3a3a;
+    --line-soft:#2a2a2a;
+    --text:#f2f2f2;
+    --text-dim:#9a9a9a;
+    --green:#3aa655;
+    --green-bright:#4cc766;
+    --red:#c0463f;
+    --white:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Georgia','Times New Roman',serif;
+    height:100%;
+  }
+  .app{
+    max-width:600px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    display:flex;
+    flex-direction:column;
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .header-main{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+  }
+  header .icons{
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+  header .icons.right{justify-content:flex-end;}
+  .icon-btn{
+    width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text);
+    background:none;border:none;cursor:pointer;
+    opacity:0.9;
+  }
+  .icon-btn:hover{opacity:1;}
+  h1.logo{
+    font-size:2rem;
+    letter-spacing:0.5px;
+    margin:0;
+    font-weight:700;
+    font-family:'Playfair Display','Georgia',serif;
+  }
+  main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:24px 20px 0;
+  }
+  
+  /* Category Grid Styles */
+  .category-screen {
+    padding: 20px 0;
+  }
+  .category-screen h2 {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .category-column-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: gold;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+  }
+  .category-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 20px 10px;
+    text-align: center;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+  .category-card:hover {
+    background: var(--green);
+    border-color: var(--green-bright);
+    transform: translateY(-2px);
+  }
+
+  .category-card.completed {
+    background: #555;
+    color: #aaa;
+    border-color: #777;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .category-card.completed:hover {
+    transform: none;
+    background: #555;
+  }
+  
+  .guess-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .guess-row{
+    border:1px solid var(--line);
+    border-radius:2px;
+    height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 16px;
+    font-size:1rem;
+    color:var(--text-dim);
+    transition:border-color .25s, background .25s;
+  }
+  .guess-row.filled{color:var(--text);}
+  .guess-row.correct{
+    border-color:var(--green);
+    background:rgba(58,166,85,0.12);
+    color:var(--text);
+  }
+  .guess-row.wrong{
+    border-color:var(--red);
+    background:rgba(192,70,63,0.10);
+    color:var(--text);
+  }
+  .guess-row.skipped{
+    color:var(--text-dim);
+    font-style:italic;
+  }
+  .guess-row .mark{
+    font-size:1.1rem;
+  }
+  .spacer{flex:1;}
+
+  .progress-track{
+    display:flex;
+    height:8px;
+    border:1px solid var(--line-soft);
+    overflow:hidden;
+    margin-bottom:0;
+  }
+  .segment{
+    position:relative;
+    height:100%;
+    background:transparent;
+    border-right:1px solid var(--line-soft);
+  }
+  .segment:last-child{border-right:none;}
+  .segment-fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:var(--green-bright);
+  }
+  .segment.done .segment-fill{width:100%;}
+
+  .player{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 4px 22px;
+  }
+  .time{
+    font-variant-numeric: tabular-nums;
+    color:var(--text-dim);
+    font-size:0.95rem;
+    width:44px;
+  }
+  .time.right{text-align:right;}
+  .play-btn{
+    width:64px;height:64px;
+    border-radius:50%;
+    border:1.5px solid var(--text);
+    background:none;
+    color:var(--text);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:1.4rem;
+  }
+  .play-btn:hover{background:rgba(255,255,255,0.06);}
+  .play-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+  .search-wrap{
+    position:relative;
+    margin-bottom:14px;
+  }
+  input.search{
+    width:100%;
+    padding:16px 18px;
+    font-size:1rem;
+    border:none;
+    border-radius:2px;
+    background:var(--white);
+    color:#111;
+    font-family:inherit;
+  }
+  input.search:disabled{
+    background:#cfcfcf;
+    color:#666;
+  }
+  input.search::placeholder{color:#666;}
+  .suggestions{
+    position:absolute;
+    left:0;right:0;
+    top:calc(100% + 4px);
+    background:var(--white);
+    color:#111;
+    border-radius:2px;
+    max-height:220px;
+    overflow-y:auto;
+    z-index:5;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+  }
+  .suggestion{
+    padding:12px 18px;
+    cursor:pointer;
+    border-bottom:1px solid #eaeaea;
+    font-size:0.95rem;
+  }
+  .suggestion:last-child{border-bottom:none;}
+  .suggestion:hover, .suggestion.active{background:#f0f0f0;}
+  .suggestion .artist{color:#777;font-size:0.85rem;}
+
+  .actions{
+    display:flex;
+    gap:12px;
+    padding-bottom:24px;
+  }
+  .btn{
+    flex:1;
+    padding:16px 0;
+    font-size:0.85rem;
+    font-family:inherit;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    font-weight:700;
+    border:none;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .btn-skip{
+    background:#3a3a3a;
+    color:var(--text);
+  }
+  .btn-skip:hover{background:#454545;}
+  .btn-submit{
+    background:var(--green);
+    color:#fff;
+  }
+  .btn-submit:hover{background:var(--green-bright);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  .result-banner{
+    text-align:center;
+    padding:16px 20px 4px;
+    color:var(--text-dim);
+    font-size:0.95rem;
+    line-height:1.5;
+  }
+  .result-banner strong{color:var(--text);}
+  .result-banner .status{
+    font-size:1.3rem;
+    display:block;
+    margin-bottom:6px;
+    font-weight:700;
+  }
+  .result-banner .status.win{color:var(--green-bright);}
+  .result-banner .status.lose{color:var(--red);}
+
+  .new-game{
+    display:block;
+    margin:14px auto 26px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:10px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    font-family:inherit;
+    letter-spacing:0.5px;
+  }
+  .new-game:hover{border-color:var(--text);}
+
+  footer.note{
+    text-align:center;
+    color:#555;
+    font-size:0.75rem;
+    padding:6px 20px 20px;
+  }
+
+  @media (max-width:480px){
+    h1.logo{font-size:1.5rem;}
+    .play-btn{width:56px;height:56px;}
+    .category-grid { gap: 5px; }
+    .category-card { padding: 12px 5px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <!-- Team Scoreboard Section -->
+    <div style="display: flex; justify-content: space-between; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line-soft); margin-bottom: 12px; border-radius: 4px;">
+      <div id="teamADisplay" style="text-align:center; border:2px solid var(--green); padding:5px 15px; border-radius:4px; cursor:pointer;">
+        <div style="font-size: 0.8rem; color: var(--text-dim);">TEAM A</div>
+        <div id="teamAScore" style="font-size: 1.5rem; font-weight: bold; color: var(--green-bright);">0</div>
+      </div>
+    
+      <div id="turnIndicator" style="align-self: center; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; color: gold;">
+      Current Turn: <span id="currentTeamName">Team A</span>
+      </div>
+
+      <div id="teamBDisplay" style="text-align:center; border:2px solid transparent; padding:5px 15px; border-radius:4px; cursor:pointer;">
+        <div style="font-size: 0.8rem; color: var(--text-dim);">TEAM B</div>
+        <div id="teamBScore" style="font-size: 1.5rem; font-weight: bold; color: var(--text-dim);">0</div>
+      </div>
+    </div>
+
+    <div class="header-main">
+      <div class="icons left">
+        <button class="icon-btn" title="How to play" id="infoBtn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+      <h1 class="logo">Heardle</h1>
+      <div class="icons right">
+        <button class="icon-btn" title="Help" id="helpBtn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Screen 1: Category Selection (Shows first) -->
+    <div class="category-screen" id="categoryScreen">
+      <h2>Select a Category Track</h2>
+      <div class="category-grid">
+        <div class="category-column-title">Hymnal</div>
+        <div class="category-column-title">Special</div>
+        <div class="category-column-title">Children</div>
+        <div class="category-column-title">Bisaya</div>
+      </div>
+      <div class="category-grid" id="gridButtons">
+        <!-- Generated Dynamically by JS to represent rows 1-7 -->
+      </div>
+    </div>
+
+    <!-- Screen 2: Main Play Area (Hidden until category is chosen) -->
+    <div id="playArea" style="display: none;">
+      <div id="trackInfoBanner" style="text-align: center; margin-bottom: 15px; color: gold; font-weight: bold;"></div>
+          <div id="roundTimer"
+            style="text-align:center;
+            font-size:2rem;
+            font-weight:bold;
+            color:#ff4444;
+            margin-bottom:15px;">0:45</div>
+      <div class="guess-list" id="guessList"></div>
+
+      <div class="progress-track" id="progressTrack"></div>
+
+      <div class="player">
+        <span class="time" id="timeCur">0:00</span>
+        <button class="play-btn" id="playBtn">
+          <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          <svg id="pauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <span class="time right" id="timeTotal">0:16</span>
+      </div>
+
+      <div class="search-wrap">
+        <input class="search" id="searchInput" type="text" placeholder="Search for a song title" autocomplete="off">
+        <div class="suggestions" id="suggestions" style="display:none;"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-skip" id="skipBtn">Skip (+1s)</button>
+        <button class="btn btn-submit" id="submitBtn">Submit</button>
+      </div>
+
+      <div class="result-banner" id="resultBanner" style="display:none;"></div>
+      <button class="new-game" id="newGameBtn" style="display:none;">Back to Categories</button>
+    </div>
+  </main>
+
+  <footer class="note">Fan-made Heardle clone &middot; melodies are synthesized</footer>
+</div>
+
+<script>
+/* ---------- Song Library Divided by Categories ---------- */
+/* You can replace the notes array below with your specific custom melodies. */
+const SONGS_DATABASE = {
+  "Hymnal": [
+    { title: "Will Your Anchor Hold", 
+      artist: "Track 1", 
+      src: "h1.mp3" },
+
+    { title: "My Hope is Built on Nothing Less", 
+      artist: "Track 2", 
+      src: "h2.mp3" },
+
+    { title: "Wonderful Peace", 
+      artist: "Track 3", 
+      src: "h3.mp3" },
+
+    { title: "Brightly Beams Our Father's Mercy", 
+      artist: "Track 4", 
+      src: "h4.mp3" },
+
+    { title: "Far From All Care", 
+      artist: "Track 5", 
+      src: "h5.mp3" },
+
+    { title: "Lord, I Care Not for Riches", 
+      artist: "Track 6", 
+      src: "h6.mp3" },
+
+    { title: "I Will Early Seek the Savior", 
+      artist: "Track 7", 
+      src: "h7.mp3" }
+  ],
+  "Special Song": [
+    { title: "Find us Faithful", 
+      artist: "Track 1", 
+      src: "s1.mp3" },
+
+    { title: "No More Nights",
+      artist: "Track 2", 
+      src: "s2.mp3" },
+
+    { title: "I Am Willing Lord", 
+      artist: "Track 3", 
+      src: "s3.mp3" },
+
+    { title: "Breathe On Me", 
+      artist: "Track 4", 
+      src: "s4.mp3" },
+
+    { title: "Shout to the Lord", 
+      artist: "Track 5", 
+      src: "s5.mp3" },
+
+    { title: "Living Water", 
+      artist: "Track 6", 
+      src: "s6.mp3" },
+
+    { title: "People Need the Lord", 
+      artist: "Track 7", 
+      src: "s7.mp3" }
+  ],
+  "Children Song": [
+    { title: "Jesus is my Captain", 
+      src: "c1.mp3" },
+
+    { title: "Give me Oil in my Lamp", 
+      artist: "Track 2", 
+      src: "c2.mp3" },
+
+    { title: "Seek Ye First", 
+      artist: "Track 3", 
+      src: "c3.mp3" },
+
+    { title: "Do Lord, Oh, Do Lord", 
+      artist: "Track 4", 
+      src: "c4.mp3" },
+
+    { title: "I've Got Love Like an Ocean", 
+      artist: "Track 5", 
+      src: "c5.mp3" },
+
+    { title: "Come Go With me to that Land", 
+      artist: "Track 6", 
+      src: "c6.mp3" },
+
+    { title: "This Little Light of Mine", 
+      artist: "Track 7", 
+      src: "c7.mp3" }
+  ],
+  "Bisaya": [
+    { title: "Ang Diotay Nga Mga Sagbot", 
+      artist: "Track 1", 
+      src: "b1.mp3" },
+
+    { title: "Adto ta sa Langit", 
+      artist: "Track 2", 
+      src: "b2.mp3" },
+
+    { title: "Ikaw ang Kusog", 
+      artist: "Track 3", 
+      src: "b3.mp3" },
+
+    { title: "Matinud-anon Ka", 
+      artist: "Track 4", 
+      src: "b4.mp3" },
+
+    { title: "Gipangga Mo Ako", 
+      artist: "Track 5", 
+      src: "b5.mp3" },
+
+    { title: "Lakaw Uban Niya", 
+      artist: "Track 6", 
+      src: "b6.mp3" },
+
+    { title: "Unahan Didto sa Suba", 
+      artist: "Track 7", 
+      src: "b7.mp3" }
+  ]
+};
+
+// Flatten pool for search engine auto-complete
+const ALL_SONGS_FLAT = [
+  ...SONGS_DATABASE["Hymnal"],
+  ...SONGS_DATABASE["Special Song"],
+  ...SONGS_DATABASE["Children Song"],
+  ...SONGS_DATABASE["Bisaya"]
+];
+
+const DUMMY_SONGS = [
+    { title: "Amazing Grace" },
+    { title: "How Great Thou Art" },
+    { title: "Blessed Assurance" },
+    { title: "Rock of Ages" },
+    { title: "Holy Holy Holy" },
+    { title: "I Need Thee Every Hour" },
+    { title: "Nearer My God to Thee" },
+    { title: "Jesus Loves Me" },
+    { title: "Stand Up for Jesus" },
+    { title: "The Old Rugged Cross" },
+    { title: "Lead Me to Calvary" },
+    { title: "Trust and Obey" },
+    { title: "Softly and Tenderly" },
+    { title: "Abide With Me" },
+    { title: "When We All Get to Heaven" },
+    { title: "My Hope Is Built on Nothing Less" },
+    { title: "Turn Your Eyes Upon Jesus" },
+    { title: "Wonderful Words of Life" },
+    { title: "My Redeemer Lives" },
+    { title: "Great is Thy Faithfulness" },
+    { title: "Holy, Holy, Holy" },
+    { title: "We Gather Together" },
+    { title: "Lord, in the Morning" },
+    { title: "Rejoice, Ye Pure in Heart!" },
+    { title: "Joyful, Joyful, We Adore Thee" },
+    { title: "O Worship the Lord" },
+    { title: "Simbahaon Nato" },
+    { title: "The Lord in Zion Reigneth" },
+    { title: "Ang Dios Hari sa Sion" },
+    { title: "Nagtigum Kita" },
+    { title: "My Maker and My King" },
+    { title: "Haring Magbuhat" },
+    { title: "Maglipay Kamong Putli" },
+    { title: "Wake the Song" },
+    { title: "Manag-awit sa Kalipay" },
+    { title: "The Name of Jesus is So Sweet" },
+    { title: "Matam-is ang Ngalang Jesus" },
+    { title: "In Joyful High And Holy Lays" },
+    { title: "Ang Malipayon nga Kanta" },
+    { title: "Lord, in the Morning" },
+    { title: "Bow The Knee" },
+    { title: "I Am Thine, O Lord" },
+    { title: "More Than Wonderful" },
+    { title: "Take the World, But Give Me Jesus" },
+    { title: "I Love To Tell The Story " },
+    { title: "It Is Well With My Soul" },
+    { title: "He Hideth My Soul" },
+    { title: "Tis so Sweet" },
+    { title: "Pass Me Not, O Gentle Savior" },
+    { title: "Your Grace Still Amazes Me" },
+    { title: "It Matters to the Master" },
+    { title: "I Will Go On" },
+    { title: "Softly And Tenderly" },
+    { title: "Love Lifted Me" },
+    { title: "In the Sweet by and by" },
+    { title: "What a Friend We Have in Jesus" },
+    { title: "Because He Lives" },
+    { title: "As the Deer" },
+    { title: "Sakayan" },
+    { title: "Gibiyaan Nya ang Langit" },
+    { title: "Magkita Ta Sa Langit" },
+    { title: "Tears Are A Language" },
+    { title: "Love in Any Language" },
+    { title: "Tungod sa iyang dugo" },
+    { title: "Didto Sa Langit" },
+    { title: "Daygon Ta Ang Diyos" },
+    { title: "Makita Ta Ang Ilhanan" },
+    { title: "Mubo Nalang Ang Panahon" },
+    { title: "Handuma ang Langit Kanunay" },
+    { title: "Biyai ang sala" },
+    { title: "Dawata ang Kaluwasan" },
+    { title: "Father Abraham" },
+    { title: "Give me the Bible" },
+    { title: "Read your Bible" },
+    { title: "Kupti Ang Pagtuo Mo" },
+    { title: "Draw Me Near" },
+    { title: "Jesus, The Loving Shepherd" },
+    { title: "Gitawag Ka Ni Jesus" },
+    { title: "There Is A Gate That Stands Ajar" },
+    { title: "Sa Binuksan nga Ganghaan" },
+    { title: "Someone Will Enter The Pearly Gate" },
+    { title: "Adunay Buot nga Mosulod" },
+    { title: "Jesus is Tenderly Calling The Home" },
+    { title: "Si Jesu-Cristo nga Maluloy-on" },
+    { title: "Whosoever Heareth" },
+    { title: "Power in the Blood" },
+    { title: "Chief of Sinners" },
+    { title: "Ako Makasasala" },
+    { title: "Rock of Ages" },
+    { title: "Near, Still Nearer" },
+    { title: "Draw Me Nearer" },
+    { title: "Wholly Thine" },
+    { title: "I Surrender All" },
+    { title: "Near the Cross" },
+    { title: "Duol sa Krus" },
+    { title: "Just as I Am" },
+    { title: "Whiter Than Snow" },
+    { title: "Umari ang Binulahan" },
+    { title: "There Is a Fountain" },
+    { title: "Redeemed!" },
+    { title: "Jesus Saves" },
+    { title: "To God Be the Glory" },
+    { title: "Nagkaduol Ta!" },
+    { title: "Bugkosa Na Kami" },
+    { title: "O Zion, Haste" },
+    { title: "O Sion, Pagdali" },
+    { title: "Lift Him Up" },
+    { title: "Malahalong Sabado" },
+    { title: "Marching to Zion" },
+    { title: "No Night There" },
+    { title: "I Shall See the King" },
+    { title: "Sweet By and By" },
+    { title: "The Glory Song" },
+    { title: "My Lord and I" },
+    { title: "A Child of the King" },
+    { title: "Anak sa Hari" },
+    { title: "Duol Sa Dios Kita" },
+    { title: "Sweet Hour of Prayer" },
+    { title: "In the Garden" },
+    { title: "Jesus Pakita" },
+    { title: "A Mighty Fortress" },
+    { title: "Moment by Moment" },
+    { title: "Anywhere With Jesus" },
+    { title: "The Lord is My Light" },
+    { title: "All the Way" },
+    { title: "Hiding in Thee" },
+    { title: "Under His Wings" },
+    { title: "He Leadeth Me" },
+    { title: "Mandoi Ako Ginoo" },
+    { title: "Wala Ako Ginoo" },
+    { title: "Not I, But Christ" },
+    { title: "Jesus Ubani Man" },
+    { title: "Trust and Obey" },
+    { title: "Hold Fast Till I Come" },
+    { title: "Stand Like the Brave" },
+    { title: "Onward, Christian Soldiers!" },
+    { title: "Sundalo nga Diosnon" },
+    { title: "Sulong Kang Satan" },
+    { title: "Higher Ground" },
+    { title: "Kita Maglipayay" },
+    { title: "I Would Be True" },
+    { title: "Love at Home" },
+    { title: "O Perfect Love" },
+    { title: "Atong Makita" },
+    { title: "By His Spirit" },
+    { title: "Kita Nagakinabuhi" },
+    { title: "Sound the Battle Cry" },
+    { title: "Wala Ako Ginoo" },
+    { title: "Hark! the Herald Angels Sing" }
+];
+
+const SEARCH_POOL = [
+    ...ALL_SONGS_FLAT,
+    ...DUMMY_SONGS
+];
+
+
+/* ---------- Note frequency helper ---------- */
+const NOTE_INDEX = {C:0,"C#":1,D:2,"D#":3,E:4,F:5,"F#":6,G:7,"G#":8,A:9,"A#":10,B:11};
+
+/* ---------- Game state ---------- */
+const REVEAL_TIMES = [1,2,4,7,11,16];
+const TOTAL_TIME = REVEAL_TIMES[REVEAL_TIMES.length-1];
+const MAX_GUESSES = REVEAL_TIMES.length;
+
+let currentSong = null;
+let currentEvents = null;
+let guessIndex = 0;
+let gameOver = false;
+let audioPlayer = new Audio();
+let isPlaying = false;
+let playStartCtxTime = 0;
+let playCapSeconds = 0;
+let rafId = null;
+let selectedCategoryButton = null;
+
+let teamScores = { A: 0, B: 0 };
+let activeTeam = 'A';
+let roundTimeLeft = 45;
+let roundTimer = null;
+
+const guessListEl = document.getElementById('guessList');
+const progressTrackEl = document.getElementById('progressTrack');
+const playBtn = document.getElementById('playBtn');
+const playIcon = document.getElementById('playIcon');
+const pauseIcon = document.getElementById('pauseIcon');
+const timeCurEl = document.getElementById('timeCur');
+const timeTotalEl = document.getElementById('timeTotal');
+const searchInput = document.getElementById('searchInput');
+const suggestionsEl = document.getElementById('suggestions');
+const skipBtn = document.getElementById('skipBtn');
+const submitBtn = document.getElementById('submitBtn');
+const resultBanner = document.getElementById('resultBanner');
+const newGameBtn = document.getElementById('newGameBtn');
+const categoryScreen = document.getElementById('categoryScreen');
+const playArea = document.getElementById('playArea');
+const gridButtons = document.getElementById('gridButtons');
+const trackInfoBanner = document.getElementById('trackInfoBanner');
+
+function fmtTime(s){
+  s = Math.max(0, Math.floor(s));
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return m + ":" + String(sec).padStart(2,'0');
+}
+
+function startRoundTimer() {
+
+    clearInterval(roundTimer);
+
+    roundTimeLeft = 45;
+
+    updateRoundTimer();
+
+    roundTimer = setInterval(() => {
+
+        roundTimeLeft--;
+
+        updateRoundTimer();
+
+        if (roundTimeLeft <= 0) {
+
+            clearInterval(roundTimer);
+
+            stopPlayback();
+
+            endGame(false);
+
+        }
+
+    }, 1000);
+}
+
+function stopRoundTimer() {
+    clearInterval(roundTimer);
+}
+
+function updateRoundTimer() {
+
+    const m = Math.floor(roundTimeLeft / 60);
+    const s = roundTimeLeft % 60;
+
+    const timer = document.getElementById("roundTimer");
+
+    timer.textContent =
+        `${m}:${String(s).padStart(2,"0")}`;
+
+    if (roundTimeLeft <= 10) {
+        timer.style.color = "red";
+    } else if (roundTimeLeft <= 20) {
+        timer.style.color = "orange";
+    } else {
+        timer.style.color = "#4cc766";
+    }
+}
+
+document.getElementById("teamADisplay").addEventListener("click", () => {
+    setActiveTeam("A");
+});
+
+document.getElementById("teamBDisplay").addEventListener("click", () => {
+    setActiveTeam("B");
+});
+
+/* ---------- Render Grid Initial Selection Screen ---------- */
+function initCategoryGrid() {
+  gridButtons.innerHTML = '';
+  const categories = ["Hymnal", "Special Song", "Children Song", "Bisaya"];
+  
+  // Render 7 rows of selection cards
+  for (let row = 0; row < 7; row++) {
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'category-card';
+      btn.textContent = (row + 1);
+      btn.addEventListener('click', () => {
+        selectedCategoryButton = btn;
+        selectTrack(cat, row);
+      });
+      gridButtons.appendChild(btn);
+    });
+  }
+}
+
+function selectTrack(category, index) {
+  const categoryPool = SONGS_DATABASE[category];
+  currentSong = categoryPool[index];
+  
+  // Update banner context labels
+  trackInfoBanner.textContent = `Category: ${category} — Track #${index + 1}`;
+  
+  // UI Switch screens
+  categoryScreen.style.display = 'none';
+  playArea.style.display = 'block';
+  
+  // Load track parameters
+  currentEvents = null;
+  guessIndex = 0;
+  gameOver = false;
+  buildBoardUI();
+  updateSegmentsForGuess(0,0);
+  timeCurEl.textContent = '0:00';
+  timeTotalEl.textContent = fmtTime(TOTAL_TIME);
+  resultBanner.style.display = 'none';
+  newGameBtn.style.display = 'none';
+  searchInput.disabled = false;
+  searchInput.value = '';
+  submitBtn.disabled = false;
+  skipBtn.disabled = false;
+  playBtn.disabled = false;
+  updateSkipLabel();
+  suggestionsEl.style.display = 'none';
+  startRoundTimer();
+}
+
+function buildBoardUI(){
+  guessListEl.innerHTML = '';
+  for(let i=0;i<MAX_GUESSES;i++){
+    const row = document.createElement('div');
+    row.className = 'guess-row';
+    row.id = 'guessRow'+i;
+    row.innerHTML = '<span class="label"></span><span class="mark"></span>';
+    guessListEl.appendChild(row);
+  }
+  progressTrackEl.innerHTML = '';
+  const segDurations = [];
+  let prev = 0;
+  for(const t of REVEAL_TIMES){ segDurations.push(t-prev); prev = t; }
+  for(let i=0;i<segDurations.length;i++){
+    const seg = document.createElement('div');
+    seg.className = 'segment';
+    seg.style.flex = segDurations[i];
+    seg.id = 'segment'+i;
+    const fill = document.createElement('div');
+    fill.className = 'segment-fill';
+    fill.id = 'segmentFill'+i;
+    seg.appendChild(fill);
+    progressTrackEl.appendChild(seg);
+  }
+}
+
+function updateSegmentsForGuess(idx, currentPlaySeconds){
+  const segDurations = [];
+  let prev = 0;
+  for(const t of REVEAL_TIMES){ segDurations.push(t-prev); prev = t; }
+  let cumulative = 0;
+  for(let i=0;i<segDurations.length;i++){
+    const segStart = cumulative;
+    const segEnd = cumulative + segDurations[i];
+    const fillEl = document.getElementById('segmentFill'+i);
+    if(currentPlaySeconds >= segEnd){
+      fillEl.style.width = '100%';
+    } else if(currentPlaySeconds > segStart){
+      const pct = ((currentPlaySeconds - segStart)/segDurations[i])*100;
+      fillEl.style.width = pct+'%';
+    } else {
+      fillEl.style.width = '0%';
+    }
+    cumulative = segEnd;
+  }
+}
+
+function updateSkipLabel(){
+  const nextIdx = guessIndex+1;
+  if(nextIdx >= MAX_GUESSES){
+    skipBtn.textContent = 'Skip';
+  } else {
+    const added = REVEAL_TIMES[nextIdx] - REVEAL_TIMES[guessIndex];
+    skipBtn.textContent = 'Skip (+'+added+'s)';
+  }
+}
+
+function currentCap(){
+  return REVEAL_TIMES[guessIndex];
+}
+
+/* ---------- Audio playback synthesis engines ---------- */
+
+function stopPlayback() {
+
+    isPlaying = false;
+
+    audioPlayer.pause();
+
+    audioPlayer.currentTime = 0;
+
+    playIcon.style.display = "inline";
+    pauseIcon.style.display = "none";
+
+}
+
+function playClip() {
+
+    if (!currentSong.src) {
+        alert("No audio file found.");
+        return;
+    }
+
+    stopPlayback();
+
+    audioPlayer.src = currentSong.src;
+
+    audioPlayer.currentTime = 0;
+
+    isPlaying = true;
+
+    playIcon.style.display = "none";
+    pauseIcon.style.display = "inline";
+
+    const cap = currentCap();
+
+    audioPlayer.play();
+
+    const timer = setInterval(() => {
+
+        timeCurEl.textContent = fmtTime(audioPlayer.currentTime);
+
+        updateSegmentsForGuess(guessIndex, audioPlayer.currentTime);
+
+        if (audioPlayer.currentTime >= cap) {
+
+            audioPlayer.pause();
+
+            audioPlayer.currentTime = 0;
+
+            stopPlayback();
+
+            clearInterval(timer);
+
+        }
+
+    }, 30);
+
+}
+
+playBtn.addEventListener('click', () => {
+  if(gameOver) return;
+  if(isPlaying){ stopPlayback(); } else { playClip(); }
+});
+
+/* ---------- Search Engine / Autocomplete Array Parsing ---------- */
+let activeSuggestionIdx = -1;
+let filteredSongs = [];
+
+function normalize(s){
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+}
+
+searchInput.addEventListener('input', () => {
+  const q = normalize(searchInput.value);
+  activeSuggestionIdx = -1;
+  if(!q){
+    suggestionsEl.style.display = 'none';
+    filteredSongs = [];
+    return;
+  }
+  filteredSongs = SEARCH_POOL.filter(s =>
+    normalize(s.title).includes(q)
+  ).slice(0,8);
+  renderSuggestions();
+});
+
+function renderSuggestions(){
+  if(filteredSongs.length === 0){
+    suggestionsEl.style.display = 'none';
+    return;
+  }
+  suggestionsEl.innerHTML = '';
+  filteredSongs.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'suggestion' + (i===activeSuggestionIdx ? ' active' : '');
+    div.innerHTML = '<div>'+s.title+'</div>';
+    div.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      searchInput.value = s.title;
+      suggestionsEl.style.display = 'none';
+    });
+    suggestionsEl.appendChild(div);
+  });
+  suggestionsEl.style.display = 'block';
+}
+
+searchInput.addEventListener('keydown', (e) => {
+  if(suggestionsEl.style.display === 'block'){
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      activeSuggestionIdx = Math.min(activeSuggestionIdx+1, filteredSongs.length-1);
+      renderSuggestions();
+      return;
+    }
+    if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      activeSuggestionIdx = Math.max(activeSuggestionIdx-1, 0);
+      renderSuggestions();
+      return;
+    }
+    if(e.key === 'Enter' && activeSuggestionIdx >= 0){
+      e.preventDefault();
+      searchInput.value = filteredSongs[activeSuggestionIdx].title;
+      suggestionsEl.style.display = 'none';
+      return;
+    }
+  }
+  if(e.key === 'Enter'){ submitGuess(); }
+});
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.search-wrap')){ suggestionsEl.style.display = 'none'; }
+});
+
+/* ---------- Guess & Team Handlers ---------- */
+function fillRow(idx, text, state){
+  const row = document.getElementById('guessRow'+idx);
+  row.classList.add('filled');
+  if(state) row.classList.add(state);
+  const label = row.querySelector('.label');
+  label.textContent = text;
+  const mark = row.querySelector('.mark');
+  if(state === 'correct') mark.textContent = '\u2713';
+  else if(state === 'wrong') mark.textContent = '\u2717';
+  else mark.textContent = '';
+}
+
+function toggleTeam() {
+    setActiveTeam(activeTeam === "A" ? "B" : "A");
+}
+
+function endGame(won){
+  stopRoundTimer();
+  gameOver = true;
+  stopPlayback();
+  searchInput.disabled = true;
+  submitBtn.disabled = true;
+  skipBtn.disabled = true;
+  resultBanner.style.display = 'block';
+  
+  if(won){
+    let pointsEarned = MAX_GUESSES - guessIndex;
+    teamScores[activeTeam] += pointsEarned;
+    
+    document.getElementById('teamAScore').textContent = teamScores.A;
+    document.getElementById('teamBScore').textContent = teamScores.B;
+
+    resultBanner.innerHTML = '<span class="status win">Team ' + activeTeam + ' Scores! (+' + pointsEarned + ' pts)</span>Answer: <strong>'+currentSong.title+'</strong>';
+  } else {
+    resultBanner.innerHTML = '<span class="status lose">Out of guesses</span>The correct song was <strong>'+currentSong.title+'</strong>';
+  }
+  newGameBtn.style.display = 'block';
+  updateSegmentsForGuess(MAX_GUESSES-1, TOTAL_TIME);
+  timeCurEl.textContent = fmtTime(TOTAL_TIME);
+
+  if (selectedCategoryButton) {
+    selectedCategoryButton.classList.add("completed");
+  }
+}
+
+function advanceGuess(labelText, state){
+  fillRow(guessIndex, labelText, state);
+  if(state === 'correct'){
+    endGame(true);
+    return;
+  }
+  
+  guessIndex++;
+  if(guessIndex >= MAX_GUESSES){
+    endGame(false);
+    return;
+  }
+  
+  toggleTeam();
+  updateSkipLabel();
+  updateSegmentsForGuess(guessIndex, 0);
+  timeCurEl.textContent = '0:00';
+}
+
+function submitGuess(){
+  if(gameOver) return;
+  const raw = searchInput.value.trim();
+  if(!raw){ searchInput.focus(); return; }
+  const guessNorm = normalize(raw);
+  const isCorrect = guessNorm === normalize(currentSong.title);
+  advanceGuess(raw, isCorrect ? 'correct' : 'wrong');
+  searchInput.value = '';
+  suggestionsEl.style.display = 'none';
+}
+
+function setActiveTeam(team) {
+
+    activeTeam = team;
+
+    document.getElementById("currentTeamName").textContent = "Team " + team;
+
+    if (team === "A") {
+
+        document.getElementById("teamADisplay").style.borderColor = "var(--green)";
+        document.getElementById("teamBDisplay").style.borderColor = "transparent";
+
+        document.getElementById("teamAScore").style.color = "var(--green-bright)";
+        document.getElementById("teamBScore").style.color = "var(--text-dim)";
+
+    } else {
+
+        document.getElementById("teamBDisplay").style.borderColor = "var(--green)";
+        document.getElementById("teamADisplay").style.borderColor = "transparent";
+
+        document.getElementById("teamBScore").style.color = "var(--green-bright)";
+        document.getElementById("teamAScore").style.color = "var(--text-dim)";
+    }
+}
+
+submitBtn.addEventListener('click', submitGuess);
+
+skipBtn.addEventListener('click', () => {
+  if(gameOver) return;
+  advanceGuess('Skipped', 'skipped');
+  searchInput.value = '';
+});
+
+newGameBtn.addEventListener('click', () => {
+  stopPlayback();
+  playArea.style.display = 'none';
+  categoryScreen.style.display = 'block';
+  stopRoundTimer();
+  document.getElementById("roundTimer").textContent = "0:45";
+});
+
+document.getElementById('infoBtn').addEventListener('click', () => {
+  alert('Choose a category block! Play the audio and turn-by-turn guess the song. Point scales reduce if sections are skipped.');
+});
+document.getElementById('helpBtn').addEventListener('click', () => {
+  alert('1. Listen to audio snippets\n2. Type answers into lookup inputs\n3. Wrong answers rotate team priority metrics');
+});
+
+/* ---------- Init Display Grid Default Setup ---------- */
+initCategoryGrid();
+</script>
+</body>
+</html>
