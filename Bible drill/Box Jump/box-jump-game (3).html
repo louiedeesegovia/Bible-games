@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Box Jump Challenge</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@600;700;900&display=swap');
+
+:root {
+  --gold: #ffd700;
+  --box-dark: #b33a00;
+  --text-main: #fff8e1;
+  --panel-bg: #3d0f00;
+  --panel-border: #8B0000;
+  --input-bg: #200800;
+  --input-border: #992e00;
+  --correct: #4caf50;
+  --wrong: #f44336;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #3a3a4a;
+  font-family: 'Press Start 2P', monospace;
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+/* ==================== SETUP SCREEN ==================== */
+#setup-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 100%);
+  padding-bottom: 40px;
+}
+
+.setup-header {
+  text-align: center;
+  padding: 24px 16px 12px;
+}
+.setup-header h1 {
+  font-size: clamp(13px, 2.2vw, 20px);
+  color: var(--gold);
+  text-shadow: 0 0 30px var(--gold);
+  line-height: 1.8;
+}
+.setup-header p {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  color: #999;
+  margin-top: 6px;
+}
+
+.player-tabs {
+  display: flex;
+  width: min(900px, 96vw);
+  border: 3px solid var(--panel-border);
+  margin: 16px 0 0;
+  overflow: hidden;
+}
+
+.tab-btn {
+  flex: 1; padding: 13px;
+  background: #200800;
+  border: none; color: #777;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #7a2400, #992e00);
+  color: var(--gold);
+  text-shadow: 0 0 8px var(--gold);
+}
+.tab-btn:hover:not(.active) { background: #3d0f00; color: #bbb; }
+
+.setup-panel { width: min(900px, 96vw); display: none; }
+.setup-panel.active { display: block; }
+
+/* Box type selector */
+.box-types-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #200800;
+  border: 3px solid var(--panel-border);
+  border-top: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.box-types-row > label {
+  font-size: 7px; color: #999; white-space: nowrap;
+}
+.box-type-grid { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.box-type-btn {
+  width: 44px; height: 44px;
+  border: 3px solid var(--box-dark);
+  background: linear-gradient(135deg, #cc5500, #cc4400, #992e00);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900; font-size: 13px; color: #1a0a00;
+  cursor: pointer; transition: all 0.15s;
+  position: relative;
+}
+.box-type-btn:hover { transform: translateY(-3px); }
+.box-type-btn.is-cement {
+  background: linear-gradient(135deg, #888, #9e9e9e, #777) !important;
+  border-color: #aaa !important; color: #fff !important;
+}
+.box-type-btn.is-empty {
+  background: #111 !important;
+  border-color: #f44336 !important; color: #f44336 !important;
+}
+.type-tag {
+  position: absolute; bottom: 0; right: 0;
+  font-size: 9px; line-height: 1;
+}
+.type-legend {
+  display: flex; gap: 10px; margin-left: auto;
+  font-family: 'Nunito', sans-serif; font-size: 12px;
+  flex-wrap: wrap;
+}
+.type-legend span { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 11px; height: 11px; border: 2px solid; display: inline-block; }
+.legend-dot.question { background: #cc4400; border-color: #b33a00; }
+.legend-dot.cement   { background: #9e9e9e; border-color: #aaa; }
+.legend-dot.empty    { background: #111;    border-color: #f44336; }
+
+/* Questions list */
+.questions-list {
+  border: 3px solid var(--panel-border);
+  border-top: none;
+  background: var(--panel-bg);
+}
+.q-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 13px 14px;
+  border-bottom: 2px solid #5a1800;
+  transition: background 0.15s;
+}
+.q-card:last-child { border-bottom: none; }
+.q-card:hover { background: rgba(255,165,0,0.04); }
+.q-card.is-cement-card { background: rgba(158,158,158,0.07); opacity: 0.65; }
+.q-card.is-empty-card  { background: rgba(244,67,54,0.06); opacity: 0.65; }
+
+.q-num {
+  min-width: 36px; width: 36px; height: 36px;
+  background: linear-gradient(135deg, #cc5500, #cc4400);
+  border: 2px solid #b33a00;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Nunito', sans-serif; font-weight: 900;
+  font-size: 16px; color: #1a0a00; margin-top: 2px; flex-shrink: 0;
+}
+.q-num.cement-num { background: linear-gradient(135deg,#888,#9e9e9e); border-color:#aaa; color:#fff; }
+.q-num.empty-num  { background: #111; border-color:#f44336; color:#f44336; }
+
+.q-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.q-disabled-label {
+  font-family: 'Nunito', sans-serif; font-size: 13px;
+  color: #666; font-style: italic; padding: 6px 0;
+}
+.q-row { display: flex; gap: 8px; align-items: flex-start; }
+.q-label { font-size: 7px; color: #888; min-width: 64px; letter-spacing: 1px; padding-top: 9px; }
+
+input[type="text"] {
+  flex: 1;
+  background: var(--input-bg);
+  border: 2px solid var(--input-border);
+  color: var(--text-main);
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px; padding: 7px 10px;
+  outline: none; transition: border-color 0.15s;
+}
+input[type="text"]:focus { border-color: var(--gold); }
+input[type="text"]::placeholder { color: #3a3a3a; }
+
+.choices-inputs {
+  flex: 1; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.choice-input-wrap { display: flex; align-items: center; gap: 6px; }
+.choice-letter { font-size: 8px; color: #777; min-width: 14px; }
+
+.answer-select-row {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+}
+.answer-label { font-size: 7px; color: #888; min-width: 64px; }
+.answer-radio { display: none; }
+.answer-radio-label {
+  padding: 5px 12px;
+  border: 2px solid #3a3a3a;
+  background: #200800; color: #777;
+  font-family: 'Nunito', sans-serif; font-weight: 700;
+  font-size: 13px; cursor: pointer; transition: all 0.15s;
+}
+.answer-radio:checked + .answer-radio-label {
+  border-color: var(--correct);
+  background: rgba(76,175,80,0.15);
+  color: #b9ffb9;
+}
+
+/* Setup actions */
+.setup-actions {
+  width: min(900px, 96vw);
+  padding: 16px 0 30px;
+  display: flex; gap: 12px;
+  justify-content: center; flex-wrap: wrap;
+  flex-direction: column; align-items: center;
+}
+.validation-msg {
+  font-family: 'Nunito', sans-serif; font-size: 14px;
+  color: #f44336; text-align: center;
+  background: rgba(244,67,54,0.1);
+  border: 2px solid #f44336;
+  padding: 10px 20px; display: none;
+}
+.validation-msg.show { display: block; }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.game-btn {
+  background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+  border: none; color: #1a0a00;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px; padding: 14px 28px;
+  cursor: pointer; transition: transform 0.1s;
+  box-shadow: 0 4px 0 #992e00;
+}
+.game-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #992e00; }
+.game-btn:active { transform: translateY(2px); box-shadow: none; }
+.game-btn.secondary {
+  background: linear-gradient(135deg, #333, #555, #333);
+  color: #ccc; box-shadow: 0 4px 0 #111;
+}
+.game-btn.secondary:hover { box-shadow: 0 6px 0 #111; }
+
+/* ==================== GAME ==================== */
+#game-wrapper {
+  width: 100vw; height: 100vh;
+  position: relative; display: none;
+  flex-direction: column;
+}
+
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between;
+  align-items: center; padding: 10px 20px;
+  background: rgba(0,0,0,0.75);
+  z-index: 100; border-bottom: 3px solid var(--gold);
+}
+#hud .hud-item { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+#hud .score { color: var(--gold); }
+.hud-score { color: var(--gold); }
+.edit-btn {
+  background: rgba(255,215,0,0.12);
+  border: 2px solid var(--gold); color: var(--gold);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px; padding: 6px 10px; cursor: pointer;
+}
+.edit-btn:hover { background: rgba(255,215,0,0.25); }
+
+#lanes {
+  display: flex; flex-direction: column;
+  width: 100%; height: 100%; padding-top: 50px;
+}
+.lane {
+  position: relative; flex: 1;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.lane-label {
+  position: absolute; left: 10px; top: 8px;
+  font-size: 7px; color: rgba(255,255,255,0.45);
+  z-index: 10; letter-spacing: 1px;
+}
+.sky-area {
+  flex: 1;
+  background: linear-gradient(180deg, #2a2a3a 0%, #3a3a4a 100%);
+  position: relative;
+}
+.ground-strip { height: 130px; position: relative; flex-shrink: 0; }
+.grass-top {
+  height: 16px;
+  background: linear-gradient(90deg, #5a9e2f, #6abf35, #5a9e2f);
+  position: relative; z-index: 2;
+}
+
+.box-row {
+  position: absolute; top: 0;
+  left: 160px; right: 120px; height: 80px;
+  display: flex; z-index: 5;
+}
+
+/* End land — safe platform after box 10 */
+.end-land {
+  position: absolute; top: 0; right: 0;
+  width: 120px; height: 80px;
+  z-index: 6;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+}
+.end-land-platform {
+  width: 100%; height: 56px;
+  background: linear-gradient(180deg, #5a9e2f 0%, #4a8a22 30%, #3a7a15 100%);
+  border-top: 4px solid #6abf35;
+  border-left: 4px solid #4a8a22;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.4);
+}
+.end-land-flag {
+  font-size: 20px;
+  animation: flagWave 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255,215,0,0.8));
+}
+.end-land.player-arrived .end-land-platform {
+  background: linear-gradient(180deg, #ffd700 0%, #b8860b 60%, #8B0000 100%);
+  border-top-color: #ffd700;
+  box-shadow: -4px 0 20px rgba(255,215,0,0.6), 0 0 30px rgba(255,215,0,0.3);
+}
+@keyframes flagWave {
+  0%,100% { transform: rotate(-8deg) scale(1); }
+  50% { transform: rotate(8deg) scale(1.1); }
+}
+.end-land-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px; color: #fff;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+}
+.box {
+  width: calc(100% / 10); height: 80px;
+  position: relative; cursor: pointer; transition: transform 0.1s;
+}
+.box:hover { transform: translateY(-3px); }
+.box-inner {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #cc5500 0%, #cc4400 40%, #992e00 100%);
+  border: 3px solid var(--box-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Nunito', sans-serif; font-weight: 900;
+  font-size: clamp(12px, 2vw, 20px); color: #1a0a00;
+  position: relative;
+  box-shadow: inset 0 0 0 2px rgba(255,150,150,0.2), 2px 2px 0 #6b1f00;
+}
+.box-inner::before {
+  content: ''; position: absolute; inset: 4px;
+  border: 2px solid rgba(0,0,0,0.2); pointer-events: none;
+}
+.box.revealed-safe .box-inner {
+  background: linear-gradient(135deg,#888,#9e9e9e,#777);
+  border-color: #555; color: #ddd;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12), 2px 2px 0 #333;
+}
+.box.revealed-safe { pointer-events: auto; cursor: pointer; }
+.box.revealed-empty .box-inner {
+  background: linear-gradient(135deg,#111,#222,#0a0a0a);
+  border-color: #000; color: #f44336;
+}
+.box.disabled { cursor: default; pointer-events: none; }
+
+.lava-area {
+  height: 50px;
+  background: linear-gradient(180deg,#ff4500,#cc2200);
+  position: relative; overflow: visible;
+}
+.lava-top {
+  position: absolute; top: -20px; left: 0; right: 0; height: 30px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 30'%3E%3Cpath d='M0 30 Q10 5 20 15 Q30 25 40 10 Q50 0 60 18 Q70 30 80 12 Q90 0 100 20 Q110 30 120 8 Q130 0 140 22 Q150 30 160 10 Q170 0 180 18 Q190 30 200 15 L200 30Z' fill='%23ff4500'/%3E%3C/svg%3E") repeat-x;
+  background-size: 200px 30px;
+  animation: lavaWave 2s linear infinite;
+}
+@keyframes lavaWave { from{background-position:0 0} to{background-position:200px 0} }
+
+/* Characters */
+.character {
+  position: absolute; bottom: 0; z-index: 20;
+  transition: left 0.3s ease;
+}
+.char-body { image-rendering: pixelated; width: 40px; height: 60px; position: relative; }
+.p1 .char-head      { background:#d4a574; width:20px; height:20px; position:absolute; top:0; left:10px; }
+.p1 .char-hair      { background:#5a3010; width:22px; height:8px;  position:absolute; top:-4px; left:9px; }
+.p1 .char-body-top  { background:#8855cc; width:24px; height:20px; position:absolute; top:18px; left:8px; }
+.p1 .char-pants     { background:#334499; width:24px; height:16px; position:absolute; top:36px; left:8px; }
+.p1 .char-shoe      { background:#222;    width:12px; height:6px;  position:absolute; bottom:0; left:6px; }
+.p1 .char-shoe2     { background:#222;    width:12px; height:6px;  position:absolute; bottom:0; right:6px; }
+.p2 .char-head      { background:#d4a574; width:18px; height:18px; position:absolute; top:2px; left:11px; }
+.p2 .char-hair      { background:#6b3a1f; width:20px; height:7px;  position:absolute; top:-2px; left:10px; }
+.p2 .char-body-top  { background:#cc3333; width:22px; height:18px; position:absolute; top:18px; left:9px; }
+.p2 .char-pants     { background:#666655; width:22px; height:16px; position:absolute; top:34px; left:9px; }
+.p2 .char-shoe      { background:#8B0000; width:11px; height:6px;  position:absolute; bottom:0; left:7px; }
+.p2 .char-shoe2     { background:#8B0000; width:11px; height:6px;  position:absolute; bottom:0; right:7px; }
+
+/* Modals */
+#question-modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.87);
+  display:none; align-items:center; justify-content:center; z-index:200;
+}
+#question-modal.active { display:flex; }
+.modal-box {
+  background:linear-gradient(135deg,#3d0f00,#2d0000);
+  border:5px solid var(--gold); padding:44px 50px;
+  max-width:860px; width:95%; text-align:center;
+  box-shadow:0 0 60px rgba(255,165,0,0.5), 0 0 120px rgba(255,100,0,0.2);
+  animation:modalPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-station { font-size:12px; color:#88ccff; margin-bottom:10px; letter-spacing:3px; }
+.modal-box-num { font-size:36px; color:var(--gold); margin-bottom:18px; text-shadow:0 0 30px var(--gold); }
+.modal-question { font-family:'Nunito',sans-serif; font-size:26px; font-weight:900; color:#fff; line-height:1.7; margin-bottom:28px; }
+.choices-hint { font-size:12px; color:#aaa; margin-bottom:14px; }
+
+/* Timer bar */
+.timer-wrap {
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.timer-bar-bg {
+  flex: 1; height: 18px;
+  background: #3d0f00;
+  border: 2px solid #992e00;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.timer-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff4500, #ffd700);
+  transform-origin: left;
+  transition: width 1s linear;
+}
+.timer-bar-fill.urgent { background: linear-gradient(90deg, #ff0000, #ff4500); }
+.timer-count {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: var(--gold);
+  min-width: 38px;
+  text-align: right;
+}
+.timer-count.urgent { color: #ff4444; animation: timerPulse 0.5s ease-in-out infinite; }
+@keyframes timerPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+.choices-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+.choice-btn {
+  background:linear-gradient(135deg,#5a1800,#7a2400);
+  border:4px solid #8B0000; color:#fff8e1;
+  font-family:'Nunito',sans-serif; font-weight:900;
+  font-size:22px; padding:20px 16px; cursor:pointer; transition:all 0.15s;
+}
+.choice-btn:hover { border-color:var(--gold); transform:translateY(-2px); }
+.choice-btn.selected-correct { background:linear-gradient(135deg,#1a4d1a,#2a7a2a); border-color:#4caf50; color:#b9ffb9; }
+.choice-btn.selected-wrong   { background:linear-gradient(135deg,#4d1a1a,#7a2a2a); border-color:#f44336; color:#ffb9b9; animation:shake 0.3s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+#result-overlay {
+  position:fixed; inset:0;
+  display:none; align-items:center; justify-content:center;
+  z-index:300; pointer-events:none;
+}
+#result-overlay.active { display:flex; }
+.result-text {
+  font-size:44px; font-family:'Press Start 2P',monospace;
+  animation:resultPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.result-correct { color:#4caf50; text-shadow:0 0 30px #4caf50; }
+.result-wrong   { color:#f44336; text-shadow:0 0 30px #f44336; }
+@keyframes resultPop {
+  0%{transform:scale(0) rotate(-10deg);opacity:0}
+  60%{transform:scale(1.2) rotate(3deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+
+#death-screen {
+  position:fixed; inset:0; background:rgba(180,0,0,0.92);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:20px; z-index:400;
+}
+#death-screen.active { display:flex; }
+#death-screen h2 { font-size:52px; color:#fff; text-align:center; line-height:1.6; text-shadow: 0 0 30px #fff, 0 4px 0 rgba(0,0,0,0.4); }
+#death-screen p  { font-family:'Nunito',sans-serif; font-size:30px; font-weight:900; color:#ffdddd; text-align:center; line-height:1.8; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+#death-screen .game-btn { font-size:14px; padding:18px 36px; margin-top:10px; }
+
+/* win screen CSS removed */
+
+@keyframes lavaFlash { 0%,100%{filter:brightness(1)} 50%{filter:brightness(3) saturate(3)} }
+.lava-area.flash { animation:lavaFlash 0.2s 3; }
+
+/* Spin Wheel */
+#wheel-modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.87);
+  display:none; align-items:center; justify-content:center; z-index:250;
+}
+#wheel-modal.active { display:flex; }
+.wheel-box { padding:34px 44px; }
+.wheel-outer {
+  position:relative; width:280px; height:280px;
+  margin:26px auto 0;
+}
+.wheel-pointer {
+  position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+  width:0; height:0;
+  border-left:15px solid transparent;
+  border-right:15px solid transparent;
+  border-top:26px solid #2b2b2b;
+  z-index:12;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,0.6));
+}
+.wheel-disc {
+  position:relative; width:100%; height:100%;
+  border-radius:50%;
+  border:10px solid #2b2b2b;
+  box-shadow:0 0 0 3px #555 inset, 0 10px 24px rgba(0,0,0,0.55);
+}
+.wheel-hub {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:32px; height:32px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #777, #1a1a1a 75%);
+  border:4px solid #2b2b2b;
+  z-index:11;
+}
+.wheel-stand {
+  width:16px; height:26px;
+  background:linear-gradient(180deg,#4a4a4a,#1a1a1a);
+  margin:0 auto;
+}
+.wheel-stand::after {
+  content:'';
+  display:block;
+  width:130px; height:16px;
+  background:linear-gradient(180deg,#4a4a4a,#111);
+  border-radius:8px;
+  margin:6px auto 0;
+}
+.wheel-seg-label {
+  position:absolute; width:96px; text-align:center;
+  font-family:'Nunito', sans-serif; font-weight:900; font-size:13px;
+  color:#fff8e1; text-shadow:1px 1px 3px rgba(0,0,0,0.85);
+  pointer-events:none;
+}
+.wheel-result {
+  font-family:'Nunito', sans-serif; font-size:22px; font-weight:900;
+  color:var(--gold); min-height:32px; margin:18px 0 18px;
+  text-shadow:0 0 12px rgba(255,215,0,0.4);
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== SETUP SCREEN ==================== -->
+<div id="setup-screen">
+  <div class="setup-header">
+    <h1>📦 BOX JUMP CHALLENGE</h1>
+    <p>Set up questions and box types for each player before playing</p>
+  </div>
+
+  <div class="player-tabs">
+    <button class="tab-btn active" onclick="switchTab(1)">👤 PLAYER 1 — Purple</button>
+    <button class="tab-btn"        onclick="switchTab(2)">👤 PLAYER 2 — Red</button>
+  </div>
+
+  <!-- Player 1 Panel -->
+  <div class="setup-panel active" id="panel-1">
+    <div class="box-types-row">
+      <label>CLICK BOX TO CYCLE TYPE →</label>
+      <div class="box-type-grid" id="type-grid-1"></div>
+      <div class="type-legend">
+        <span><span class="legend-dot question"></span>Question</span>
+        <span><span class="legend-dot cement"></span>Cement 🪨</span>
+        <span><span class="legend-dot empty"></span>Empty 💣</span>
+      </div>
+    </div>
+    <div class="questions-list" id="qlist-1"></div>
+  </div>
+
+  <!-- Player 2 Panel -->
+  <div class="setup-panel" id="panel-2">
+    <div class="box-types-row">
+      <label>CLICK BOX TO CYCLE TYPE →</label>
+      <div class="box-type-grid" id="type-grid-2"></div>
+      <div class="type-legend">
+        <span><span class="legend-dot question"></span>Question</span>
+        <span><span class="legend-dot cement"></span>Cement 🪨</span>
+        <span><span class="legend-dot empty"></span>Empty 💣</span>
+      </div>
+    </div>
+    <div class="questions-list" id="qlist-2"></div>
+  </div>
+
+  <div class="setup-actions">
+    <div id="validation-msg" class="validation-msg"></div>
+    <div class="btn-row">
+      <button class="game-btn secondary" onclick="resetSetup()">🔄 RESET ALL</button>
+      <button class="game-btn" onclick="startGame()">▶ START GAME</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAME ==================== -->
+<div id="game-wrapper">
+  <div id="hud">
+    <div class="hud-item" style="color:#88ccff;font-size:9px;">📦 BOX JUMP</div>
+    <div class="hud-item" style="color:#ff6b6b;font-size:10px;">
+      <span id="p1-lives">❤️❤️❤️</span>&nbsp;P1&nbsp;<span class="hud-score" id="p1-score">⭐0</span>&nbsp;&nbsp;&nbsp;P2&nbsp;<span class="hud-score" id="p2-score">⭐0</span>&nbsp;<span id="p2-lives">❤️❤️❤️</span>
+    </div>
+    <button class="edit-btn" onclick="goToSetup()">✏ EDIT</button>
+  </div>
+
+  <div id="lanes">
+    <div class="lane" id="lane-1">
+      <div class="lane-label">PLAYER 1 — PURPLE</div>
+      <div class="sky-area">
+        <div class="character p1" id="char-p1">
+          <div class="char-body">
+            <div class="char-hair"></div><div class="char-head"></div>
+            <div class="char-body-top"></div><div class="char-pants"></div>
+            <div class="char-shoe"></div><div class="char-shoe2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ground-strip">
+        <div class="grass-top"></div>
+        <div class="box-row" id="boxes-p1"></div>
+        <div class="end-land" id="end-land-p1" onclick="onEndLandClick(1)" style="cursor:pointer;">
+          <div class="end-land-platform">
+            <div class="end-land-flag">🚩</div>
+            <div class="end-land-label">FINISH</div>
+          </div>
+        </div>
+        <div class="lava-area" id="lava-p1"><div class="lava-top"></div></div>
+      </div>
+    </div>
+
+    <div class="lane" id="lane-2">
+      <div class="lane-label">PLAYER 2 — RED</div>
+      <div class="sky-area">
+        <div class="character p2" id="char-p2">
+          <div class="char-body">
+            <div class="char-hair"></div><div class="char-head"></div>
+            <div class="char-body-top"></div><div class="char-pants"></div>
+            <div class="char-shoe"></div><div class="char-shoe2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ground-strip">
+        <div class="grass-top"></div>
+        <div class="box-row" id="boxes-p2"></div>
+        <div class="end-land" id="end-land-p2" onclick="onEndLandClick(2)" style="cursor:pointer;">
+          <div class="end-land-platform">
+            <div class="end-land-flag">🚩</div>
+            <div class="end-land-label">FINISH</div>
+          </div>
+        </div>
+        <div class="lava-area" id="lava-p2"><div class="lava-top"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION MODAL -->
+<div id="question-modal">
+  <div class="modal-box">
+    <div class="modal-station" id="modal-station-label"></div>
+    <div class="modal-box-num">📦 BOX <span id="modal-box-num">?</span></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="timer-wrap">
+      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar"></div></div>
+      <div class="timer-count" id="timer-count">45</div>
+    </div>
+    <div class="choices-hint">Choose the correct answer:</div>
+    <div class="choices-grid" id="choices-grid"></div>
+    <div style="font-size:8px;color:#777;">⚠ Wrong = step on a bomb and go back!</div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div id="result-overlay">
+  <div class="result-text" id="result-text"></div>
+</div>
+
+<!-- DEATH SCREEN -->
+<div id="death-screen">
+  <h2>💣 STEPPED ON<br>A BOMB!</h2>
+  <p id="death-msg"></p>
+  <button class="game-btn" onclick="respawnPlayer()">🔄 GO BACK</button>
+</div>
+
+<!-- SPIN WHEEL MODAL -->
+<div id="wheel-modal">
+  <div class="modal-box wheel-box">
+    <div class="modal-station">🪨 CEMENT BONUS SPIN!</div>
+    <div class="wheel-outer">
+      <div class="wheel-pointer"></div>
+      <div class="wheel-disc" id="wheel-disc"></div>
+      <div class="wheel-hub"></div>
+    </div>
+    <div class="wheel-stand"></div>
+    <div class="wheel-result" id="wheel-result"></div>
+    <button class="game-btn" id="spin-btn" onclick="spinWheel()">🎯 SPIN!</button>
+  </div>
+</div>
+
+<!-- win screen removed -->
+
+<script>
+// ============================================================
+//  SETUP DATA
+// ============================================================
+function freshSetup() {
+  return {
+    1: Array.from({length:13}, () => ({ boxType:'question', question:'', choices:['','','',''], answer:0 })),
+    2: Array.from({length:13}, () => ({ boxType:'question', question:'', choices:['','','',''], answer:0 }))
+  };
+}
+let setupData = freshSetup();
+let activeTab = 1;
+
+// ============================================================
+//  BUILD SETUP UI
+// ============================================================
+function buildSetupUI() {
+  [1,2].forEach(p => {
+    buildTypeGrid(p);
+    buildQList(p);
+  });
+}
+
+function buildTypeGrid(p) {
+  const grid = document.getElementById(`type-grid-${p}`);
+  grid.innerHTML = '';
+  setupData[p].forEach((box, i) => {
+    const btn = document.createElement('button');
+    applyTypeBtnStyle(btn, box.boxType, i);
+    btn.title = 'Click to cycle: Question → Cement → Empty';
+    btn.addEventListener('click', () => cycleBoxType(p, i));
+    grid.appendChild(btn);
+  });
+}
+
+function applyTypeBtnStyle(btn, type, i) {
+  btn.className = 'box-type-btn' + (type==='cement' ? ' is-cement' : type==='empty' ? ' is-empty' : '');
+  btn.id = `typebtn-p${arguments.length}`;  // overridden below
+  btn.innerHTML = `${i+1}<span class="type-tag">${type==='cement'?'🪨':type==='empty'?'💣':'❓'}</span>`;
+}
+
+function cycleBoxType(p, i) {
+  const order = ['question','cement','empty'];
+  const cur = setupData[p][i].boxType;
+  setupData[p][i].boxType = order[(order.indexOf(cur)+1) % order.length];
+  const next = setupData[p][i].boxType;
+  const btn = document.getElementById(`typebtn-p${p}-${i}`);
+  btn.className = 'box-type-btn' + (next==='cement' ? ' is-cement' : next==='empty' ? ' is-empty' : '');
+  btn.innerHTML = `${i+1}<span class="type-tag">${next==='cement'?'🪨':next==='empty'?'💣':'❓'}</span>`;
+  refreshQCard(p, i);
+}
+
+function buildTypeGridWithIds(p) {
+  const grid = document.getElementById(`type-grid-${p}`);
+  grid.innerHTML = '';
+  setupData[p].forEach((box, i) => {
+    const btn = document.createElement('button');
+    btn.id = `typebtn-p${p}-${i}`;
+    btn.className = 'box-type-btn' + (box.boxType==='cement' ? ' is-cement' : box.boxType==='empty' ? ' is-empty' : '');
+    btn.innerHTML = `${i+1}<span class="type-tag">${box.boxType==='cement'?'🪨':box.boxType==='empty'?'💣':'❓'}</span>`;
+    btn.title = 'Click to cycle: Question → Cement → Empty';
+    btn.addEventListener('click', () => cycleBoxType(p, i));
+    grid.appendChild(btn);
+  });
+}
+
+function buildQList(p) {
+  const list = document.getElementById(`qlist-${p}`);
+  list.innerHTML = '';
+  setupData[p].forEach((_, i) => list.appendChild(makeQCard(p, i)));
+}
+
+function makeQCard(p, i) {
+  const box = setupData[p][i];
+  const card = document.createElement('div');
+  card.id = `qcard-p${p}-${i}`;
+  card.className = `q-card${box.boxType==='cement' ? ' is-cement-card' : box.boxType==='empty' ? ' is-empty-card' : ''}`;
+
+  // Number badge
+  const num = document.createElement('div');
+  num.className = `q-num${box.boxType==='cement' ? ' cement-num' : box.boxType==='empty' ? ' empty-num' : ''}`;
+  num.textContent = i + 1;
+  card.appendChild(num);
+
+  const fields = document.createElement('div');
+  fields.className = 'q-fields';
+
+  // All boxes need a question — the box type only determines what's revealed after answering
+  const typeLbl = document.createElement('div');
+  typeLbl.className = 'q-disabled-label';
+  if (box.boxType === 'cement') {
+    typeLbl.textContent = '🪨 Cement — correct answer → player lands safely';
+    typeLbl.style.color = '#9e9e9e';
+  } else if (box.boxType === 'empty') {
+    typeLbl.textContent = '💣 Empty — correct answer → player still falls!';
+    typeLbl.style.color = '#f44336';
+  }
+  if (box.boxType !== 'question') fields.appendChild(typeLbl);
+
+  // Question row
+  fields.appendChild(makeRow('QUESTION', p, i, null));
+  // Choices row
+  fields.appendChild(makeChoicesRow(p, i));
+  // Answer row
+  fields.appendChild(makeAnswerRow(p, i));
+
+  card.appendChild(fields);
+  return card;
+}
+
+function makeRow(labelText, p, i) {
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'q-label';
+  lbl.textContent = labelText;
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = `Question for box ${i+1}...`;
+  inp.value = setupData[p][i].question;
+  inp.addEventListener('input', e => { setupData[p][i].question = e.target.value; });
+  row.appendChild(lbl);
+  row.appendChild(inp);
+  return row;
+}
+
+function makeChoicesRow(p, i) {
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'q-label';
+  lbl.textContent = 'CHOICES';
+  const grid = document.createElement('div');
+  grid.className = 'choices-inputs';
+  ['A','B','C','D'].forEach((letter, ci) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'choice-input-wrap';
+    const cl = document.createElement('span');
+    cl.className = 'choice-letter';
+    cl.textContent = letter + '.';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = `Choice ${letter}`;
+    inp.value = setupData[p][i].choices[ci];
+    inp.addEventListener('input', e => { setupData[p][i].choices[ci] = e.target.value; });
+    wrap.appendChild(cl); wrap.appendChild(inp);
+    grid.appendChild(wrap);
+  });
+  row.appendChild(lbl); row.appendChild(grid);
+  return row;
+}
+
+function makeAnswerRow(p, i) {
+  const row = document.createElement('div');
+  row.className = 'answer-select-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'answer-label';
+  lbl.textContent = 'CORRECT';
+  row.appendChild(lbl);
+  ['A','B','C','D'].forEach((letter, ci) => {
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = `answer-p${p}-${i}`;
+    radio.id = `ans-p${p}-${i}-${ci}`;
+    radio.className = 'answer-radio';
+    if (setupData[p][i].answer === ci) radio.checked = true;
+    radio.addEventListener('change', () => { setupData[p][i].answer = ci; });
+    const rl = document.createElement('label');
+    rl.htmlFor = `ans-p${p}-${i}-${ci}`;
+    rl.className = 'answer-radio-label';
+    rl.textContent = letter;
+    row.appendChild(radio); row.appendChild(rl);
+  });
+  return row;
+}
+
+function refreshQCard(p, i) {
+  document.getElementById(`qcard-p${p}-${i}`).replaceWith(makeQCard(p, i));
+}
+
+function switchTab(p) {
+  activeTab = p;
+  document.querySelectorAll('.tab-btn').forEach((b,idx) => b.classList.toggle('active', idx+1===p));
+  document.querySelectorAll('.setup-panel').forEach((panel,idx) => panel.classList.toggle('active', idx+1===p));
+}
+
+function resetSetup() {
+  if (!confirm('Reset ALL questions and box types for both players?')) return;
+  setupData = freshSetup();
+  buildTypeGridWithIds(1); buildTypeGridWithIds(2);
+  buildQList(1); buildQList(2);
+}
+
+// ============================================================
+//  VALIDATION
+// ============================================================
+function validateSetup() {
+  for (let p = 1; p <= 2; p++) {
+    for (let i = 0; i < 10; i++) {
+      const box = setupData[p][i];
+      // ALL box types need a question now (revelation happens after answering)
+      if (!box.question.trim())
+        return `Player ${p} — Box ${i+1}: Question text is empty.`;
+      const filled = box.choices.filter(c => c.trim());
+      if (filled.length < 2)
+        return `Player ${p} — Box ${i+1}: Need at least 2 answer choices.`;
+      if (!box.choices[box.answer] || !box.choices[box.answer].trim())
+        return `Player ${p} — Box ${i+1}: The selected correct answer choice is blank.`;
+    }
+  }
+  return null;
+}
+
+// ============================================================
+//  GAME STATE
+// ============================================================
+let state = {};
+let dyingPlayer = null;
+
+function freshState() {
+  return {
+    activePlayer: null,
+    currentBox: null,
+    wheelPlayer: null,
+    players: {
+      1: { pos:0, lives:3, done:false, score:0 },
+      2: { pos:0, lives:3, done:false, score:0 }
+    }
+  };
+}
+
+// ============================================================
+//  START / NAVIGATION
+// ============================================================
+function startGame() {
+  const err = validateSetup();
+  const msgEl = document.getElementById('validation-msg');
+  if (err) {
+    msgEl.textContent = '⚠ ' + err;
+    msgEl.classList.add('show');
+    // Switch to the right tab
+    const match = err.match(/Player (\d)/);
+    if (match) switchTab(parseInt(match[1]));
+    setTimeout(() => msgEl.classList.remove('show'), 5000);
+    return;
+  }
+  msgEl.classList.remove('show');
+  state = freshState();
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-wrapper').style.display = 'flex';
+  buildBothLanes();
+  updateHUD();
+}
+
+function replayGame() {
+  state = freshState();
+  buildBothLanes();
+  updateHUD();
+}
+
+function goToSetup() {
+  document.getElementById('death-screen').classList.remove('active');
+  document.getElementById('question-modal').classList.remove('active');
+  document.getElementById('game-wrapper').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+
+// ============================================================
+//  BUILD LANES
+// ============================================================
+function buildLane(p) {
+  const row = document.getElementById(`boxes-p${p}`);
+  row.innerHTML = '';
+  document.getElementById(`end-land-p${p}`)?.classList.remove('player-arrived');
+  for (let i = 1; i <= 13; i++) {
+    const box = document.createElement('div');
+    box.className = 'box';
+    box.id = `box-p${p}-${i}`;
+    const inner = document.createElement('div');
+    inner.className = 'box-inner';
+    inner.textContent = i;
+    box.appendChild(inner);
+    box.addEventListener('click', () => onBoxClick(p, i));
+    row.appendChild(box);
+  }
+}
+function buildBothLanes() {
+  buildLane(1); buildLane(2);
+  positionCharacter(1); positionCharacter(2);
+}
+
+function positionCharacter(p) {
+  const char = document.getElementById(`char-p${p}`);
+  const pos = state.players[p].pos;
+  const laneWidth = document.getElementById(`lane-${p}`).offsetWidth;
+  const boxWidth = (laneWidth - 280) / 13; // 160 left wall + 120 end land
+
+  if (pos === 0) {
+    // Starting platform — ground level
+    char.style.left = '60px';
+    char.style.bottom = '5px';
+  } else if (pos === 14) {
+    // Finish land platform
+    char.style.left = (laneWidth - 80) + 'px';
+    char.style.bottom = '56px'; // height of end-land-platform
+  } else {
+    // Standing ON TOP of a box: box sits at top:0 of ground-strip (which is 130px tall),
+    // box height = 80px. Character bottom is relative to sky-area bottom (= ground-strip top).
+    // So character.bottom = 0 aligns feet with grass top. On box: bottom = 80px exactly.
+    char.style.left = (160 + (pos-1)*boxWidth + boxWidth/2 - 20) + 'px';
+    char.style.bottom = '80px';
+  }
+}
+
+// ============================================================
+//  BOX CLICK
+// ============================================================
+function onBoxClick(p, boxNum) {
+  const player = state.players[p];
+  if (player.done || player.lives <= 0) return;
+
+  const allowed = [player.pos - 3, player.pos - 2, player.pos - 1, player.pos + 1, player.pos + 2, player.pos + 3]
+    .filter(n => n >= 1 && n <= 13);
+  if (!allowed.includes(boxNum)) {
+    showFloatingMsg(`Jump to box ${allowed.join(' or ')} only!`);
+    return;
+  }
+
+  const box = document.getElementById(`box-p${p}-${boxNum}`);
+
+  // Already revealed cement — step on freely
+  if (box.classList.contains('revealed-safe')) {
+    state.players[p].pos = boxNum;
+    showResult('🪨 CEMENT!', true);
+    setTimeout(() => {
+      positionCharacter(p);
+    }, 200);
+    return;
+  }
+
+  // Block revealed empty boxes
+  if (box.classList.contains('revealed-empty') || box.classList.contains('disabled')) return;
+
+  // All unrevealed boxes go through the question modal first.
+  // The box type (cement/empty/question) is only revealed AFTER answering.
+  state.activePlayer = p;
+  state.currentBox = boxNum;
+  showQuestion(p, boxNum);
+}
+
+// Clicking the end land — only accessible from box 9 or 10
+function onEndLandClick(p) {
+  const player = state.players[p];
+  if (player.done || player.lives <= 0) return;
+  if (player.pos < 12) {
+    showFloatingMsg(`Reach box 12 or 13 first to jump to FINISH!`);
+    return;
+  }
+  // Jump to finish line — player cleared!
+  state.players[p].pos = 14;
+  state.players[p].done = true;
+  document.getElementById(`end-land-p${p}`).classList.add('player-arrived');
+  showResult('🚩 FINISH!', true);
+  setTimeout(() => positionCharacter(p), 200);
+}
+
+// ============================================================
+//  REVEAL
+// ============================================================
+function revealCement(p, boxNum) {
+  const box = document.getElementById(`box-p${p}-${boxNum}`);
+  box.classList.add('revealed-safe');
+  box.querySelector('.box-inner').textContent = '🪨';
+  state.players[p].pos = boxNum;
+  state.players[p].score += 5;
+  updateHUD();
+  showResult('🪨 CEMENT!', true);
+  setTimeout(() => {
+    positionCharacter(p);
+  }, 200);
+}
+
+function revealEmpty(p, boxNum) {
+  const box = document.getElementById(`box-p${p}-${boxNum}`);
+  box.classList.add('revealed-empty', 'disabled');
+  box.querySelector('.box-inner').textContent = '💣';
+  state.players[p].lives--;
+  updateHUD();
+  flashLava(p);
+  showResult('✗ EMPTY!', false);
+  setTimeout(() => showDeathScreen(p, state.players[p].lives <= 0), 600);
+}
+
+function flashLava(p) {
+  const lava = document.getElementById(`lava-p${p}`);
+  lava.classList.add('flash');
+  setTimeout(() => lava.classList.remove('flash'), 700);
+}
+
+// ============================================================
+//  CEMENT BONUS SPIN WHEEL
+// ============================================================
+const WHEEL_SEGMENTS = [
+  { label: '+1❤️ +2⭐', hearts: 1, points: 2,  color: '#e63946' },
+  { label: '+2❤️ +1⭐', hearts: 2, points: 1,  color: '#f4a300' },
+  { label: '+3⭐',       hearts: 0, points: 3,  color: '#ffd23f' },
+  { label: '+5⭐',       hearts: 0, points: 5,  color: '#4caf50' },
+  { label: '+11⭐',      hearts: 0, points: 11, color: '#2196f3' },
+  { label: '+13⭐',      hearts: 0, points: 13, color: '#9c59d1' }
+];
+let wheelSpinning = false;
+
+function buildWheel() {
+  const disc = document.getElementById('wheel-disc');
+  const segAngle = 360 / WHEEL_SEGMENTS.length;
+  const gradientParts = WHEEL_SEGMENTS
+    .map((seg, i) => `${seg.color} ${i * segAngle}deg ${(i + 1) * segAngle}deg`)
+    .join(', ');
+  disc.style.background = `conic-gradient(${gradientParts})`;
+  disc.innerHTML = '';
+  const Cx = 140, Cy = 140, labelR = 92;
+  WHEEL_SEGMENTS.forEach((seg, i) => {
+    const centerDeg = i * segAngle + segAngle / 2;
+    const rad = centerDeg * Math.PI / 180;
+    const x = Cx + labelR * Math.sin(rad);
+    const y = Cy - labelR * Math.cos(rad);
+    const div = document.createElement('div');
+    div.className = 'wheel-seg-label';
+    div.style.left = (x - 48) + 'px';
+    div.style.top = (y - 9) + 'px';
+    div.textContent = seg.label;
+    disc.appendChild(div);
+  });
+}
+
+function showSpinWheel(p) {
+  state.wheelPlayer = p;
+  const disc = document.getElementById('wheel-disc');
+  disc.style.transition = 'none';
+  disc.style.transform = 'rotate(0deg)';
+  void disc.offsetWidth; // force reflow so the reset applies before next spin
+  document.getElementById('wheel-result').textContent = '';
+  const btn = document.getElementById('spin-btn');
+  btn.textContent = '🎯 SPIN!';
+  btn.disabled = false;
+  btn.onclick = spinWheel;
+  document.getElementById('wheel-modal').classList.add('active');
+}
+
+function spinWheel() {
+  if (wheelSpinning) return;
+  wheelSpinning = true;
+  const btn = document.getElementById('spin-btn');
+  btn.disabled = true;
+  const idx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+  const segAngle = 360 / WHEEL_SEGMENTS.length;
+  const targetRotation = 5 * 360 + (360 - (idx * segAngle + segAngle / 2));
+  const disc = document.getElementById('wheel-disc');
+  disc.style.transition = 'transform 3.2s cubic-bezier(0.12,0.85,0.2,1)';
+  disc.style.transform = `rotate(${targetRotation}deg)`;
+  setTimeout(() => {
+    const seg = WHEEL_SEGMENTS[idx];
+    const p = state.wheelPlayer;
+    state.players[p].score += seg.points;
+    if (seg.hearts) state.players[p].lives += seg.hearts;
+    updateHUD();
+    document.getElementById('wheel-result').textContent = `🎉 YOU WON ${seg.label}!`;
+    btn.textContent = '✓ CONTINUE';
+    btn.disabled = false;
+    btn.onclick = closeWheel;
+    wheelSpinning = false;
+  }, 3300);
+}
+
+function closeWheel() {
+  document.getElementById('wheel-modal').classList.remove('active');
+}
+
+// ============================================================
+//  QUESTION MODAL
+// ============================================================
+// ── Timer ──────────────────────────────────────────────────────────
+let timerInterval = null;
+const TIMER_SECONDS = 45;
+
+function startTimer() {
+  stopTimer(); // clear any existing
+  let remaining = TIMER_SECONDS;
+  const bar = document.getElementById('timer-bar');
+  const count = document.getElementById('timer-count');
+  bar.classList.remove('urgent');
+  count.classList.remove('urgent');
+  bar.style.width = '100%';
+  count.textContent = remaining;
+
+  timerInterval = setInterval(() => {
+    remaining--;
+    const pct = (remaining / TIMER_SECONDS) * 100;
+    bar.style.width = pct + '%';
+    count.textContent = remaining;
+
+    if (remaining <= 6) {
+      bar.classList.add('urgent');
+      count.classList.add('urgent');
+    }
+
+    if (remaining <= 0) {
+      stopTimer();
+      // Time's up — treat as wrong answer
+      const btns = document.querySelectorAll('.choice-btn');
+      btns.forEach(b => b.style.pointerEvents = 'none');
+      const p = state.activePlayer;
+      const correct = setupData[p][state.currentBox - 1].answer;
+      btns.forEach(b => { if (parseInt(b.dataset.idx) === correct) b.classList.add('selected-correct'); });
+      setTimeout(() => {
+        document.getElementById('question-modal').classList.remove('active');
+        wrongAnswerGoBack(p);
+      }, 1000);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ── Question modal ──────────────────────────────────────────────────
+function showQuestion(p, boxNum) {
+  const box = setupData[p][boxNum - 1];
+  document.getElementById('modal-station-label').textContent = `PLAYER ${p} — BOX ${boxNum}`;
+  document.getElementById('modal-box-num').textContent = boxNum;
+  document.getElementById('modal-question').textContent = box.question;
+
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = '';
+  box.choices.forEach((choice, idx) => {
+    if (!choice.trim()) return;
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.dataset.idx = idx;
+    btn.textContent = `${'ABCD'[idx]}. ${choice}`;
+    btn.addEventListener('click', () => onAnswer(parseInt(btn.dataset.idx), box.answer));
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('question-modal').classList.add('active');
+  startTimer();
+}
+
+function onAnswer(chosen, correct) {
+  stopTimer();
+  const btns = document.querySelectorAll('.choice-btn');
+  btns.forEach(b => b.style.pointerEvents = 'none');
+  const p = state.activePlayer;
+  const boxNum = state.currentBox;
+  const boxType = setupData[p][boxNum - 1].boxType;
+
+  if (chosen === correct) {
+    // Show correct highlight
+    btns.forEach(b => { if (parseInt(b.dataset.idx) === chosen) b.classList.add('selected-correct'); });
+    setTimeout(() => {
+      document.getElementById('question-modal').classList.remove('active');
+      // NOW reveal what the box actually is
+      if (boxType === 'empty') {
+        revealEmpty(p, boxNum);   // correct answer but box is empty — still falls!
+      } else {
+        correctAnswer(p, boxNum, boxType === 'cement'); // cement or question-type — safe
+      }
+    }, 800);
+  } else {
+    // Wrong — show highlights but DO NOT change the box at all
+    btns.forEach(b => {
+      const idx = parseInt(b.dataset.idx);
+      if (idx === chosen)  b.classList.add('selected-wrong');
+      if (idx === correct) b.classList.add('selected-correct');
+    });
+    setTimeout(() => {
+      document.getElementById('question-modal').classList.remove('active');
+      // Box stays unanswered — player just goes back to start
+      wrongAnswerGoBack(p);
+    }, 1100);
+  }
+}
+
+function correctAnswer(p, boxNum, isCement) {
+  const box = document.getElementById(`box-p${p}-${boxNum}`);
+  box.classList.add('revealed-safe');
+  box.querySelector('.box-inner').textContent = '🪨';
+  state.players[p].pos = boxNum;
+  state.players[p].score += 10;
+  updateHUD();
+  showResult('✓ CORRECT!', true);
+  setTimeout(() => {
+    positionCharacter(p);
+  }, 200);
+  if (isCement) {
+    setTimeout(() => showSpinWheel(p), 1000);
+  }
+}
+
+function wrongAnswerGoBack(p) {
+  // Box stays completely unanswered — no visual change
+  state.players[p].lives--;
+  updateHUD();
+  flashLava(p);
+  showResult('✗ WRONG!', false);
+  setTimeout(() => showDeathScreen(p, state.players[p].lives <= 0), 600);
+}
+
+function wrongAnswer(p, boxNum) {
+  // Legacy — not called anymore, kept for safety
+  wrongAnswerGoBack(p);
+}
+
+// ============================================================
+//  DEATH / RESPAWN
+// ============================================================
+function showDeathScreen(p, gameOver) {
+  dyingPlayer = p;
+  const lives = state.players[p].lives;
+  document.getElementById('death-msg').textContent = gameOver
+    ? `Player ${p} is out of lives! 💣`
+    : `Player ${p} stepped on a bomb! ${lives} ❤️ left — back to start!`;
+  document.getElementById('death-screen').classList.add('active');
+}
+
+function respawnPlayer() {
+  document.getElementById('death-screen').classList.remove('active');
+  if (!dyingPlayer) return;
+  if (state.players[dyingPlayer].lives <= 0) state.players[dyingPlayer].done = true;
+  state.players[dyingPlayer].pos = 0;
+  positionCharacter(dyingPlayer);
+  dyingPlayer = null;
+}
+
+// ============================================================
+//  WIN
+// ============================================================
+// checkWin removed — no winner screen
+
+// ============================================================
+//  HUD
+// ============================================================
+function updateHUD() {
+  const hearts = n => '❤️'.repeat(Math.max(0,n)) + '🖤'.repeat(Math.max(0,3-n));
+  document.getElementById('p1-lives').textContent = hearts(state.players[1].lives);
+  document.getElementById('p2-lives').textContent = hearts(state.players[2].lives);
+  document.getElementById('p1-score').textContent = '⭐' + state.players[1].score;
+  document.getElementById('p2-score').textContent = '⭐' + state.players[2].score;
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function showResult(text, correct) {
+  const el = document.getElementById('result-text');
+  el.textContent = text;
+  el.className = 'result-text ' + (correct ? 'result-correct' : 'result-wrong');
+  const overlay = document.getElementById('result-overlay');
+  overlay.classList.add('active');
+  setTimeout(() => overlay.classList.remove('active'), 900);
+}
+
+function showFloatingMsg(msg) {
+  const div = document.createElement('div');
+  div.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(200,50,0,0.92);color:#fff;padding:10px 20px;font-family:'Press Start 2P',monospace;font-size:8px;z-index:500;border:2px solid #ff6a00;white-space:nowrap;animation:fadeUpMsg 1.5s forwards;`;
+  div.textContent = msg;
+  document.body.appendChild(div);
+  if (!document.getElementById('fadeUpStyle')) {
+    const s = document.createElement('style');
+    s.id = 'fadeUpStyle';
+    s.textContent = `@keyframes fadeUpMsg{0%{opacity:1;top:80px}100%{opacity:0;top:44px}}`;
+    document.head.appendChild(s);
+  }
+  setTimeout(() => div.remove(), 1500);
+}
+
+window.addEventListener('resize', () => { positionCharacter(1); positionCharacter(2); });
+
+// INIT
+buildTypeGridWithIds(1); buildTypeGridWithIds(2);
+buildQList(1); buildQList(2);
+buildWheel();
+</script>
+</body>
+</html>
