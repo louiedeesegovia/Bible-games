@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Poetry Scrolls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English+SC&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --wood:#1c1713;
+    --wood-2:#2a231d;
+    --parchment:#BBB093;
+    --parchment-2:#9D8C71;
+    --parchment-shadow:#937449;
+    --ink:#221a14;
+    --wax:#AA633F;
+    --wax-dark:#7c4224;
+    --gold:#C8A55F;
+    --gold-bright:#e0c382;
+    --aegean:#4D89B0;
+    --aegean-dark:#315b77;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin:0;
+    min-height:100vh;
+    font-family: 'Papyrus', fantasy, sans-serif;
+    color: var(--parchment);
+    background: radial-gradient(ellipse at top, #1f2a36 0%, #141b22 55%, #0a0e12 100%);
+    background-attachment: fixed;
+    padding: 30px 16px 60px;
+  }
+
+  h1, h2, h3 { font-family: 'Papyrus', fantasy, sans-serif; letter-spacing: 1px; font-weight: normal; }
+  .hidden { display:none !important; }
+
+  .brand { text-align:center; margin-bottom: 10px; }
+  .brand h1 {
+    font-family: 'Papyrus', fantasy, sans-serif;
+    font-size: 2.6em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 18px rgba(200,165,95,0.45), 0 2px 0 #000;
+    margin: 10px 0 4px;
+  }
+  .brand .sub {
+    color: var(--parchment-2);
+    font-style: italic;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    opacity: 0.75;
+  }
+  .divider {
+    width: 220px; height: 1px; margin: 18px auto;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  #setup-mode { max-width: 900px; margin: 0 auto; }
+  .setup-row {
+    margin-bottom: 18px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--parchment-shadow);
+    border-left: 4px solid var(--wax);
+    border-radius: 6px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .setup-row strong { color: var(--gold-bright); font-family: 'Papyrus', fantasy, sans-serif; font-size:1.15em; }
+  .field-label {
+    display:block; margin-top: 10px; margin-bottom: 3px;
+    font-size: 0.8em; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--parchment-2); opacity: 0.9;
+  }
+  input, textarea, select {
+    width: 100%; padding: 8px 10px; background: #14100c;
+    color: var(--parchment); border: 1px solid var(--parchment-shadow); border-radius: 4px;
+    font-family: 'Papyrus', fantasy, sans-serif; font-size: 1em;
+  }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--aegean); }
+  input.answer-input-field { background:#241712; border-color: var(--wax); font-weight:600; }
+
+  .level-group-title {
+    text-align:center; margin: 40px 0 10px;
+    color: var(--gold-bright); font-size: 1.4em;
+  }
+
+  .action-btn {
+    padding: 12px 30px; font-size: 1.1em;
+    font-family: 'Papyrus', fantasy, sans-serif; letter-spacing: 1px;
+    cursor: pointer; background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color: var(--ink); border: none; border-radius: 4px;
+    box-shadow: 0 3px 0 var(--parchment-shadow), 0 6px 12px rgba(0,0,0,0.4);
+  }
+  .action-btn:hover { filter: brightness(1.08); }
+  .action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--parchment-shadow); }
+
+  .nav-btn {
+    padding: 9px 18px; font-size: 0.95em;
+    font-family: 'Papyrus', fantasy, sans-serif; cursor: pointer;
+    background: transparent; color: var(--aegean);
+    border: 1px solid var(--aegean); border-radius: 4px;
+  }
+  .nav-btn:hover { background: rgba(77,137,176,0.18); }
+
+  .nav-btn-parchment { color: var(--ink); border-color: var(--wax-dark); background: rgba(0,0,0,0.06); }
+  .nav-btn-parchment:hover { background: rgba(0,0,0,0.14); }
+
+  .setup-actions { text-align:center; margin: 30px 0; }
+
+  #game-mode { max-width: 950px; margin: 0 auto; text-align:center; }
+  #game-title { font-size: 2em; color: var(--gold-bright); margin-bottom: 6px; }
+  .level-tag { color: var(--parchment-2); font-style: italic; margin-bottom: 20px; opacity:0.9;}
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 24px; max-width: 900px; margin: 30px auto;
+    justify-content:center; justify-items:center;
+  }
+
+  .level-card {
+    width: 100%; max-width: 190px; cursor:pointer; padding: 26px 16px;
+    background: linear-gradient(160deg, #2a221a, #17120e);
+    border: 1px solid var(--parchment-shadow); border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s; position: relative;
+  }
+  .level-card:hover { transform: translateY(-4px); box-shadow: 0 10px 22px rgba(0,0,0,0.5); }
+  .level-card .seal {
+    width: 46px; height:46px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--wax), var(--wax-dark) 70%);
+    margin: 0 auto 12px; box-shadow: inset 0 0 8px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.5);
+    display:flex; align-items:center; justify-content:center;
+    font-family: 'Papyrus', fantasy, sans-serif; font-size: 0.75em; color: var(--gold-bright);
+  }
+  .level-card strong { display:block; font-size: 1.15em; color: var(--parchment); font-family: 'Papyrus', fantasy, sans-serif; }
+  .level-card .desc { font-size: 0.75em; color: var(--parchment-2); opacity: 0.8; margin-top: 4px;}
+
+  .scroll-card {
+    width: 100%; max-width: 170px; cursor: pointer; padding: 0;
+    border-radius: 6px; overflow: hidden; background: var(--parchment);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5); transition: transform 0.2s; color: var(--ink);
+  }
+  .scroll-card:hover { transform: translateY(-4px) rotate(-1deg); }
+  .scroll-card .rod {
+    height: 14px; background: linear-gradient(180deg, #6aa2c7, var(--aegean) 50%, var(--aegean-dark));
+  }
+  .scroll-card .body {
+    padding: 22px 12px 18px; text-align:center;
+    background: repeating-linear-gradient(0deg, rgba(147,116,73,0.08) 0px, rgba(147,116,73,0.08) 2px, transparent 2px, transparent 4px), var(--parchment);
+  }
+  .scroll-card .body .num {
+    font-family: 'Papyrus', fantasy, sans-serif; font-size: 1.6em; color: var(--wax); display:block; margin-bottom: 6px;
+  }
+  .scroll-card .body .label { font-size: 0.85em; letter-spacing: 1px; text-transform: uppercase; color: #5d482d;}
+  .scroll-card .done-mark { font-size: 0.75em; color: #235832; margin-top: 4px; font-style: italic; }
+
+  .scroll-card.solved { filter: grayscale(1); opacity: 0.55; }
+  .scroll-card.solved:hover { transform: none; }
+  .scroll-card.solved .done-mark { color: #444; }
+
+  #game-nav-bar { margin-top: 30px; }
+
+  #scroll-view { max-width: 640px; margin: 0 auto; }
+  .parchment-panel {
+    background: repeating-linear-gradient(0deg, rgba(147,116,73,0.06) 0px, rgba(147,116,73,0.06) 2px, transparent 2px, transparent 4px), radial-gradient(ellipse at 30% 0%, #d4cbaf, var(--parchment) 60%, var(--parchment-2) 100%);
+    color: var(--ink); border-radius: 4px; padding: 34px 30px 26px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.55); position: relative;
+    animation: unroll 0.5s ease-out; transform-origin: top center;
+  }
+  @keyframes unroll {
+    from { transform: scaleY(0.05); opacity: 0; }
+    to { transform: scaleY(1); opacity: 1; }
+  }
+  .parchment-panel::before, .parchment-panel::after {
+    content:""; position:absolute; left:0; right:0; height: 16px;
+    background: linear-gradient(180deg, #6aa2c7, var(--aegean) 60%, var(--aegean-dark));
+    border-radius: 3px;
+  }
+  .parchment-panel::before { top: -8px; }
+  .parchment-panel::after { bottom: -8px; }
+
+  .scroll-heading { text-align:center; margin-bottom: 4px; font-size: 1.5em; color: var(--wax-dark); }
+  .scroll-sub { text-align:center; font-size:0.8em; letter-spacing:2px; text-transform:uppercase; color:var(--aegean-dark); margin-bottom: 18px; }
+
+  .poem-text {
+    font-style: italic; font-size: 1.9em; line-height: 1.2;
+    white-space: pre-line; text-align: center; padding: 6px 10px 20px;
+    border-bottom: 1px dashed var(--parchment-shadow); margin-bottom: 20px;
+  }
+
+  mark.poem-highlight {
+    background-color: var(--gold);
+    color: var(--ink);
+    font-weight: bold;
+    border-radius: 3px;
+    padding: 0 4px;
+  }
+
+  .timer-row { display:flex; align-items:center; justify-content:center; gap: 14px; margin-bottom: 18px; }
+  .candle { width: 18px; height: 70px; position: relative; }
+  .candle .wax-body { position:absolute; bottom:0; left:0; right:0; background: linear-gradient(180deg, var(--parchment), var(--parchment-2)); border-radius: 2px 2px 0 0; transition: height 1s linear; }
+  .candle .flame { position:absolute; top:-14px; left:50%; transform: translateX(-50%); font-size: 18px; filter: drop-shadow(0 0 6px orange); }
+  .timer-display { font-family: 'Papyrus', fantasy, sans-serif; font-size: 1.6em; color: var(--wax); min-width: 90px; text-align:left; }
+  .timer-display.warn { color: #b33; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  .hint-box { text-align:center; margin-bottom: 14px; min-height: 2.4em; font-size: 1.95em; color: #4a3a25; font-style: italic; }
+
+  .answer-row { display:flex; gap: 10px; margin-bottom: 8px; }
+  .answer-row input { flex: 1; background: #e8e0cc; color: var(--ink); border: 1px solid var(--parchment-shadow); }
+  .answer-row button { white-space: nowrap; }
+
+  .feedback { text-align:center; margin: 14px 0 4px; padding: 12px; border-radius: 5px; font-size: 1.05em; }
+  .feedback.correct { background: rgba(77,137,176,0.18); border: 1px solid var(--aegean); color: #24587a; }
+  .feedback.wrong { background: rgba(170,99,63,0.15); border: 1px solid var(--wax); color: var(--wax-dark); }
+  .feedback.timeup { background: rgba(170,99,63,0.18); border: 1px solid var(--wax); color: var(--wax-dark); }
+
+  .scroll-footer { text-align:center; margin-top: 18px; }
+
+  .scoreboard-wrap { text-align:center; margin: 4px 0 22px; }
+  .scoreboard-label { font-size: 0.72em; letter-spacing: 2px; text-transform: uppercase; color: var(--parchment-2); opacity: 0.8; margin-bottom: 8px; }
+  .scoreboard { display:flex; flex-wrap:wrap; justify-content:center; gap: 10px; }
+  .team-chip {
+    cursor: pointer; background: rgba(0,0,0,0.3); border: 1px solid var(--parchment-shadow);
+    border-radius: 6px; padding: 8px 16px; min-width: 100px; text-align: center;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .team-chip:hover { transform: translateY(-2px); }
+  .team-chip.active {
+    border-color: var(--aegean); box-shadow: 0 0 12px rgba(77,137,176,0.5); background: rgba(77,137,176,0.18);
+  }
+  .team-chip.disabled {
+    opacity: 0.35; cursor: not-allowed; filter: grayscale(1); border-color: #333;
+  }
+  .team-chip .t-name {
+    display:block; font-family: 'Papyrus', fantasy, sans-serif; font-size: 0.9em;
+    color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .team-chip .t-score { font-family: 'Papyrus', fantasy, sans-serif; font-size: 1.25em; color: var(--ink); }
+  #team-name-fields { margin-top: 4px; }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <h1>Poetry Scrolls</h1>
+  </div>
+  <div class="divider"></div>
+
+  <div id="setup-mode">
+    <h2 style="text-align:center;">Scribe's Setup</h2>
+    <p style="text-align:center; color:var(--parchment-2); max-width:600px; margin:0 auto 20px; font-size:0.95em;">
+      Fill in as many scrolls as you like. Empty scrolls are simply skipped in-game.
+      For each scroll, give it a title, the poem itself, highlight words, an optional hint, and the answer players must type.
+    </p>
+    <div class="setup-row" style="border-left-color: var(--gold);">
+      <strong>Groups &amp; Teams</strong>
+      <label class="field-label">Number of Groups (2–4)</label>
+      <select id="numGroups" onchange="renderTeamNameFields()">
+        <option value="2">2 Groups</option>
+        <option value="3">3 Groups</option>
+        <option value="4">4 Groups</option>
+      </select>
+      <div id="team-name-fields"></div>
+    </div>
+
+    <div id="setup-fields"></div>
+    <div class="setup-actions">
+      <button class="action-btn" onclick="startGame()">Begin the Game</button>
+    </div>
+  </div>
+
+  <div id="game-mode" class="hidden">
+    <h2 id="game-title">Poetry Scrolls</h2>
+    <div class="level-tag" id="level-tag"></div>
+    <div class="scoreboard-wrap">
+      <div class="scoreboard" id="scoreboard"></div>
+    </div>
+    <div class="grid" id="case-grid"></div>
+    <div id="game-nav-bar"></div>
+  </div>
+
+  <div id="scroll-view" class="hidden">
+    <div class="parchment-panel">
+      <div class="scroll-heading" id="scroll-heading">Scroll</div>
+      <div class="scroll-sub" id="scroll-sub"></div>
+
+      <div class="scoreboard-wrap">
+        <div class="scoreboard" id="scoreboard-scroll"></div>
+      </div>
+
+      <div class="poem-text" id="poem-text"></div>
+
+      <div class="timer-row">
+        <div class="candle">
+          <div class="flame">🔥</div>
+          <div class="wax-body" id="wax-body" style="height:100%;"></div>
+        </div>
+        <div class="timer-display" id="timer-display">3:00</div>
+      </div>
+
+      <div class="hint-box" id="hint-box"></div>
+
+      <div class="answer-row">
+        <input type="text" id="answer-input" placeholder="Type your answer..." onkeydown="if(event.key==='Enter') submitAnswer()">
+        <button class="action-btn" onclick="submitAnswer()">Submit</button>
+      </div>
+      <div style="text-align:center;">
+        <button class="nav-btn nav-btn-parchment" id="hint-btn" onclick="showHint()" style="margin-top:6px;">Reveal Hint</button>
+      </div>
+
+      <div class="feedback hidden" id="feedback"></div>
+
+      <div class="scroll-footer">
+        <button class="nav-btn nav-btn-parchment" onclick="backToScrolls()">← Back to Scrolls</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const levels = [
+    {key:'Easy', label:'Easy', desc:'Short & gentle verses', points:3},
+    {key:'Intermediate', label:'Intermediate', desc:'A steadier challenge', points:5},
+    {key:'Advanced', label:'Advanced', desc:'Riddles run deeper', points:7},
+    {key:'Expert', label:'Expert', desc:'Only true scholars pass', points:10}
+  ];
+  const SCROLLS_PER_LEVEL = 10;
+  const TIME_LIMIT = 180; // Default 3 minutes
+  const RESET_TIME = 150; // Reset time (2:30) on wrong answer
+
+  let currentLevel = '';
+  let currentIndex = 0;
+  let currentAnswer = '';
+  let currentHint = '';
+  let timerInterval = null;
+  let timeLeft = TIME_LIMIT;
+  let answered = false;
+  let disabledTeams = []; // Array to track disabled group indices
+
+  const setupDiv = document.getElementById('setup-fields');
+  levels.forEach(lvl => {
+    setupDiv.innerHTML += `<div class="level-group-title">${lvl.label}</div>`;
+    for (let i = 1; i <= SCROLLS_PER_LEVEL; i++) {
+      const id = `${lvl.key}${i}`;
+      setupDiv.innerHTML += `
+        <div class="setup-row">
+          <strong>${lvl.label} — Scroll ${i}</strong>
+          <label class="field-label">Poem Title</label>
+          <input type="text" id="${id}Title" placeholder="e.g. The Shepherd's Lament">
+          <label class="field-label">Poem</label>
+          <textarea id="${id}Poem" placeholder="Write or paste the poem here..."></textarea>
+          <label class="field-label">Highlight Words (comma or space separated)</label>
+          <input type="text" id="${id}Highlights" placeholder="e.g. gold, shadow, night">
+          <label class="field-label">Hint (optional)</label>
+          <input type="text" id="${id}Hint" placeholder="A gentle clue">
+          <label class="field-label">Answer</label>
+          <input type="text" id="${id}Answer" class="answer-input-field" placeholder="What must the player type?">
+        </div>`;
+    }
+  });
+
+  function renderTeamNameFields() {
+    const n = parseInt(document.getElementById('numGroups').value, 10);
+    const container = document.getElementById('team-name-fields');
+    container.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      container.innerHTML += `
+        <label class="field-label">Team ${i} Name</label>
+        <input type="text" id="teamName${i}" placeholder="Team ${i}">`;
+    }
+  }
+  renderTeamNameFields();
+
+  function startGame() {
+    window.gameData = {};
+    levels.forEach(lvl => {
+      for (let i = 1; i <= SCROLLS_PER_LEVEL; i++) {
+        const id = `${lvl.key}${i}`;
+        window.gameData[id] = {
+          title: document.getElementById(`${id}Title`).value.trim(),
+          poem: document.getElementById(`${id}Poem`).value.trim(),
+          highlights: document.getElementById(`${id}Highlights`).value.trim(),
+          hint: document.getElementById(`${id}Hint`).value.trim(),
+          answer: document.getElementById(`${id}Answer`).value.trim(),
+          solved: false
+        };
+      }
+    });
+
+    const numGroups = parseInt(document.getElementById('numGroups').value, 10);
+    window.teams = [];
+    for (let i = 1; i <= numGroups; i++) {
+      const nameInput = document.getElementById(`teamName${i}`);
+      const name = (nameInput && nameInput.value.trim()) || `Team ${i}`;
+      window.teams.push({ name, score: 0 });
+    }
+    window.activeTeamIndex = 0;
+
+    document.getElementById('setup-mode').classList.add('hidden');
+    document.getElementById('game-mode').classList.remove('hidden');
+    showMainMenu();
+  }
+
+  function renderScoreboard(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el || !window.teams) return;
+    
+    el.innerHTML = window.teams.map((t, idx) => {
+      const isDisabled = disabledTeams.includes(idx);
+      const isActive = idx === window.activeTeamIndex;
+      return `
+        <div class="team-chip${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" 
+             onclick="${isDisabled ? '' : `setActiveTeam(${idx})`}">
+          <span class="t-name">${t.name}</span>
+          <span class="t-score">${t.score}</span>
+        </div>`;
+    }).join('');
+  }
+
+  function setActiveTeam(idx) {
+    window.activeTeamIndex = idx;
+    renderScoreboard('scoreboard');
+    renderScoreboard('scoreboard-scroll');
+  }
+
+  function showMainMenu() {
+    currentLevel = '';
+    document.getElementById('game-title').innerText = ' ';
+    document.getElementById('level-tag').innerText = ' ';
+
+    const grid = document.getElementById('case-grid');
+    grid.innerHTML = '';
+    levels.forEach(lvl => {
+      grid.innerHTML += `
+        <div class="level-card" onclick="playLevel('${lvl.key}')">
+          <div class="seal">SEAL</div>
+          <strong>${lvl.label}</strong>
+          <div class="desc">${lvl.desc}</div>
+        </div>`;
+    });
+
+    document.getElementById('game-nav-bar').innerHTML =
+      `<button class="nav-btn" onclick="backToSetup()">← Back to Scribe's Setup</button>`;
+
+    renderScoreboard('scoreboard');
+  }
+
+  function playLevel(lvlKey) {
+    currentLevel = lvlKey;
+    const lvl = levels.find(l => l.key === lvlKey);
+    document.getElementById('game-title').innerText = lvl.label + ' Chamber';
+    document.getElementById('level-tag').innerText = ' ';
+
+    const grid = document.getElementById('case-grid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= SCROLLS_PER_LEVEL; i++) {
+      const data = window.gameData[`${lvlKey}${i}`];
+      const solvedMark = data.solved ? `<div class="done-mark">✓ solved</div>` : '';
+      grid.innerHTML += `
+        <div class="scroll-card${data.solved ? ' solved' : ''}" onclick="openScroll('${lvlKey}', ${i})">
+          <div class="rod"></div>
+          <div class="body">
+            <span class="num">${i}</span>
+            <div class="label">Scroll</div>
+            ${solvedMark}
+          </div>
+        </div>`;
+    }
+
+    document.getElementById('game-nav-bar').innerHTML =
+      `<button class="nav-btn" onclick="showMainMenu()">← Back to Chambers</button>`;
+
+    renderScoreboard('scoreboard');
+  }
+
+  function formatPoemWithHighlights(poemText, highlightStr) {
+    if (!poemText) return 'This scroll has faded to blankness — no poem was inscribed.';
+    
+    // Escape HTML characters to prevent XSS/rendering errors
+    let safeText = poemText
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    if (!highlightStr) return safeText;
+
+    // Parse highlight words split by spaces or commas
+    const words = highlightStr.split(/[\s,]+/).map(w => w.trim()).filter(w => w.length > 0);
+    if (words.length === 0) return safeText;
+
+    // Sort longer words first so longer phrases/words match first
+    words.sort((a, b) => b.length - a.length);
+
+    // Escape special regex characters in search terms
+    const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`\\b(${escapedWords.join('|')})\\b`, 'gi');
+
+    return safeText.replace(regex, '<mark class="poem-highlight">$1</mark>');
+  }
+
+  function openScroll(lvlKey, i) {
+    disabledTeams = []; // Reset disabled teams for every new scroll
+    currentLevel = lvlKey;
+    currentIndex = i;
+    const data = window.gameData[`${lvlKey}${i}`];
+    currentAnswer = (data.answer || '').trim().toLowerCase();
+    currentHint = data.hint || 'No hint was left for this scroll.';
+    answered = false;
+
+    document.getElementById('game-mode').classList.add('hidden');
+    document.getElementById('scroll-view').classList.remove('hidden');
+
+    document.getElementById('scroll-heading').innerText = data.title || `Untitled Scroll ${i}`;
+    document.getElementById('scroll-sub').innerText = `${lvlKey} · Scroll ${i}`;
+    
+    // Apply highlight words to the poem
+    document.getElementById('poem-text').innerHTML = formatPoemWithHighlights(data.poem, data.highlights);
+
+    document.getElementById('answer-input').value = '';
+    document.getElementById('answer-input').disabled = false;
+    document.getElementById('hint-box').innerText = '';
+    document.getElementById('hint-btn').classList.remove('hidden');
+    document.getElementById('feedback').classList.add('hidden');
+    document.getElementById('feedback').innerText = '';
+
+    renderScoreboard('scoreboard-scroll');
+    startTimer();
+  }
+
+  function showHint() {
+    document.getElementById('hint-box').innerText = '💡 ' + currentHint;
+    document.getElementById('hint-btn').classList.add('hidden');
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = TIME_LIMIT;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timeUp();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    const display = document.getElementById('timer-display');
+    display.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+    display.classList.toggle('warn', timeLeft <= 30);
+
+    const pct = Math.max(0, (timeLeft / TIME_LIMIT) * 100);
+    document.getElementById('wax-body').style.height = pct + '%';
+  }
+
+  function timeUp() {
+    if (answered) return;
+    answered = true;
+    document.getElementById('answer-input').disabled = true;
+    document.getElementById('hint-btn').classList.add('hidden');
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback timeup';
+    fb.innerText = `⏳ Time's up. The correct answer was: ${window.gameData[`${currentLevel}${currentIndex}`].answer || '(none given)'}`;
+    fb.classList.remove('hidden');
+  }
+
+  function submitAnswer() {
+    if (answered) return;
+    const input = document.getElementById('answer-input').value.trim().toLowerCase();
+    const fb = document.getElementById('feedback');
+
+    if (input === '') return;
+
+    if (input === currentAnswer && currentAnswer !== '') {
+      answered = true;
+      clearInterval(timerInterval);
+      document.getElementById('answer-input').disabled = true;
+      document.getElementById('hint-btn').classList.add('hidden');
+      window.gameData[`${currentLevel}${currentIndex}`].solved = true;
+
+      const lvlInfo = levels.find(l => l.key === currentLevel);
+      const pts = lvlInfo ? lvlInfo.points : 0;
+      let teamNote = '';
+      if (window.teams && window.teams[window.activeTeamIndex]) {
+        window.teams[window.activeTeamIndex].score += pts;
+        teamNote = ` ${window.teams[window.activeTeamIndex].name} earns ${pts} points!`;
+        renderScoreboard('scoreboard-scroll');
+      }
+
+      fb.className = 'feedback correct';
+      fb.innerText = `✓ Correct! The scroll's secret is yours.${teamNote}`;
+      fb.classList.remove('hidden');
+    } else {
+      // Disable current team scorebox
+      if (!disabledTeams.includes(window.activeTeamIndex)) {
+        disabledTeams.push(window.activeTeamIndex);
+      }
+
+      // If all teams made a mistake, reset disables so everyone is pressable again
+      if (disabledTeams.length >= window.teams.length) {
+        disabledTeams = [];
+      }
+
+      // Pass turn to next enabled team
+      let nextTeam = (window.activeTeamIndex + 1) % window.teams.length;
+      while (disabledTeams.includes(nextTeam) && disabledTeams.length < window.teams.length) {
+        nextTeam = (nextTeam + 1) % window.teams.length;
+      }
+      window.activeTeamIndex = nextTeam;
+
+      // Reset timer to 2 minutes and 30 seconds
+      timeLeft = RESET_TIME;
+      updateTimerDisplay();
+
+      fb.className = 'feedback wrong';
+      fb.innerText = '✗ Not quite. The turn passes to the next group, and time resets to 2:30.';
+      fb.classList.remove('hidden');
+
+      renderScoreboard('scoreboard-scroll');
+    }
+  }
+
+  function backToScrolls() {
+    clearInterval(timerInterval);
+    document.getElementById('scroll-view').classList.add('hidden');
+    document.getElementById('game-mode').classList.remove('hidden');
+    playLevel(currentLevel);
+  }
+
+  function backToSetup() {
+    document.getElementById('game-mode').classList.add('hidden');
+    document.getElementById('setup-mode').classList.remove('hidden');
+  }
+</script>
+</body>
+</html>
